@@ -1,0 +1,8 @@
+cognos_gw:
+  - src: http://puppetweb.ercot.com/cognos/ca_srv_lnxi38664_11.1.4.zip
+    dest: /app/cognos/software/c11/
+  - src: http://puppetweb.ercot.com/cognos/ca_instl_lnxi38664_2.0.191003.bin
+    dest: /app/cognos/software/c11/
+gw_response:
+  - src: cognos-gateway.properties
+    dest: /app/cognos/software/c11/

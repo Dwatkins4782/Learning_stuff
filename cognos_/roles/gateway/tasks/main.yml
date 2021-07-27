@@ -1,0 +1,106 @@
+---
+- include_role:
+    name: common
+
+# RHSCL repo for newer Apache
+- name: Enable RHSCL
+  rhsm_repository:
+    name: rhel-server-rhscl-7-rpms
+    state: enabled
+
+# Might need to create dir before this.
+- name: Install Apache
+  yum:
+    name: httpd24-httpd
+    #installroot: /app/cognos/httpd
+    state: present
+
+
+# Because of how rhscl stuff works, we have to create many symlinks to provide
+# an expected user experience.
+
+- name: Link RHCL etc files to /etc
+  file:
+    src: /opt/rh/httpd24/root/etc/httpd
+    dest: /etc/httpd
+    owner: cognos
+    group: cognos
+    state: link
+
+- name: Give httpd ownership to cognos.
+  file:
+    path: /opt/rh/httpd24/root/etc/httpd/
+    state: directory
+    recurse: yes
+    owner: cognos
+    group: cognos
+
+- name: Link RHCL /var/www files to /var
+  file:
+    src: /opt/rh/httpd24/root/var/www
+    dest: /var/www
+    owner: cognos
+    group: cognos
+    state: link
+
+- name: Change logging path
+  lineinfile: 
+    path: /etc/httpd/conf/httpd.conf
+    line: 'CustomLog "/app/cognos/logs/access_log" common'
+    state: present
+
+- name: Copy sudo file for service manipulation
+  copy:
+    src: httpd.sudo
+    dest: /etc/sudoers.d/httpd
+    owner: root
+    group: root
+    mode: 0400
+    validate: /usr/sbin/visudo -cf %s
+
+- name: Copy the systemd unit file to rename it to just httpd
+  copy:
+    src: /usr/lib/systemd/system/httpd24-httpd.service
+    dest: /usr/lib/systemd/system/httpd.service
+    remote_src: yes
+    mode: preserve
+
+- name: Enable apache service
+  service:
+    name: httpd
+    enabled: yes
+    state: started
+
+- name: Copy Cognos software.
+  get_url:
+    url: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: cognos
+    group: cognos
+  with_items:
+    - "{{ cognos_gw }}"
+  
+- name: Grab response file
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: cognos
+    group: cognos
+  with_items:
+    - "{{ gw_response }}"
+
+- name: Create dir
+  file: 
+    path: /app/cognos/software/temp
+    state: directory
+
+# TODO: eliminate explicit versioning
+- name: Cognos Gateway silent install
+  command:
+    chdir: /app/cognos/software/c11
+    cmd: sudo -u cognos sh -x ca_instl_lnxi38664_2.0.191003.bin -DREPO=ca_srv_lnxi38664_11.1.4.zip -f cognos-gateway.properties -i silent
+    creates: /tmp/install_output_log_cognos_analytics.txt
+  # setting environment does not seem to work
+  #become_user: cognos
+  environment:
+    IATEMPDIR: /app/cognos/software/temp

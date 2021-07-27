@@ -1,0 +1,52 @@
+---
+packages:
+  - binutils
+  - compat-libcap1
+  - compat-libstdc++-33
+  - compat-libstdc++-33.i686
+  - gcc
+  - gcc-c++
+  - glibc
+  - glibc.i686
+  - glibc-devel
+  - glibc-devel.i686
+  - ksh
+  - libaio
+  - libaio.i686
+  - libaio-devel
+  - libaio-devel.i686
+  - libgcc
+  - libgcc.i686
+  - libstdc++
+  - libstdc++.i686
+  - libstdc++-devel
+  - libstdc++-devel.i686
+  - libXi
+  - libXi.i686
+  - libXtst
+  - libXtst.i686
+  - make
+  - sysstat
+  - nspr
+  - nspr.i686
+  - nss
+  - nss.i686
+  - motif
+  - motif.i686
+  - unixODBC
+  - unixODBC-devel
+  - unzip
+
+dirs:
+  - /app/cognos
+  - /app/cognos/software
+  - /app/cognos/software/c11
+  - /app/cognos/software/temp
+  - /app/cognos/logs
+  - /app/cognos/java
+  - /app/cognos/oracle
+  - /app/cognos/oracle/tmp
+
+java:
+  - src: http://puppetweb.ercot.com/cognos/jre-8u221-linux-x64.tar.gz
+    dest: /app/cognos/java/

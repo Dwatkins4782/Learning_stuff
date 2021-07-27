@@ -1,0 +1,78 @@
+---
+- include_role:
+    name: common
+# Kind of a hack to compress into one task. Might be better to get_url first?
+- name: Grab and Unpack oracle client
+  unarchive:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: cognos
+    group: cognos
+    remote_src: yes
+  with_items:
+    - "{{ thirdparty }}"
+
+- name: Copy response files (content type)
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: cognos
+    group: cognos
+  with_items:
+    - "{{ content_response }}"
+
+- name: Oracle silent install
+  command: 
+    chdir: /app/cognos/oracle/
+    cmd: /app/cognos/oracle/client32/runInstaller -silent -ignorePrereqFailure -waitForCompletion -responseFile /app/cognos/oracle/client.rsp
+    creates: /app/cognos/oracle/product/
+  register: oinst
+  failed_when: oinst.rc != 253
+  become_user: cognos
+  become: yes
+  become_method: sudo
+  environment:
+    TMP: /app/cognos/oracle/tmp/
+  tags:
+    - oracle_install
+
+- name: chown oracle to cognos
+  file:
+    dest: /app/cognos/oracle
+    owner: cognos
+    group: cognos
+    recurse: yes
+  tags:
+    - oracle_install
+
+- name: Copy oracle client files to /etc
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: cognos
+    group: cognos
+  with_items:
+    - "{{ orafiles }}"
+
+# Splitting up these copies so that Oracle and Cognos may be updated separately.
+- name: Copy Cognos software.
+  get_url:
+    url: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: cognos
+    group: cognos
+    # Because /tmp gets full
+    tmp_dest: "{{ item.dest }}"
+  with_items:
+    - "{{ cognos_report }}"
+
+
+# TODO: eliminate explicit versioning
+- name: Cognos Report/Content silent install
+  command:
+    chdir: /app/cognos/software/c11/
+    cmd: sudo IATEMPDIR=/app/cognos/software/temp -u cognos sh -x ca_instl_lnxi38664_2.0.191003.bin -DREPO=ca_srv_lnxi38664_11.1.4.zip -f cognos-content.properties -i silent
+    creates: /app/cognos/c11/bin/activation.jar
+  #become_user: cognos
+  environment:
+    IATEMPDIR: /app/cognos/software/temp

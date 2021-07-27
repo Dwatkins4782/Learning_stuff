@@ -1,0 +1,8 @@
+---
+- name: Set up Cognos servers.
+  hosts: itest_rep
+  gather_facts: no
+  remote_user: ansible
+  become: yes
+  roles:
+    - report

@@ -1,0 +1,1 @@
+%Cognos-Sudo ALL=(root) /usr/bin/systemctl stop httpd, /usr/bin/systemctl start httpd, /usr/bin/systemctl restart httpd

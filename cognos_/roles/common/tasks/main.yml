@@ -1,0 +1,55 @@
+---
+- name: Create cognos group.
+  group:
+    name: cognos
+    gid: 611
+
+- name: Create cognos user.
+  user:
+    name: cognos
+    uid: 611
+    group: cognos
+    expires: -1
+
+- name: Create cognos paths.
+  file: 
+    path: "{{ item }}"
+    state: directory
+    owner: cognos
+    group: cognos
+    mode: 0775
+  with_items:
+    - "{{ dirs }}"
+  
+- name: Copy sudo file.
+  copy:
+    src: cognos-uni.sudo
+    dest: /etc/sudoers.d/cognos
+    owner: root
+    group: root
+    mode: 0440
+    validate: /usr/sbin/visudo -cf %s
+
+- name: Copy limits.d file.
+  copy:
+    src: 10-cognos.conf
+    dest: /etc/security/limits.d/10-cognos.conf
+    owner: root
+    group: root
+
+- name: Install packages.
+  yum:
+    name: "{{ packages }}"
+    state: present
+
+- name: Drop in java from tarball
+  unarchive:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: cognos
+    group: cognos
+    remote_src: yes
+    #extra_opts:
+    #  - --strip-components=1
+  with_items:
+    - "{{ java }}"

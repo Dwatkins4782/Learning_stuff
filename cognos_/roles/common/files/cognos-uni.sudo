@@ -1,0 +1,1 @@
+%Cognos-Sudo ALL=(root) /bin/su - cognos, /bin/su cognos
