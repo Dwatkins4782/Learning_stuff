@@ -1,0 +1,12 @@
+---
+- name: /etc/hosts.allow permissions
+  file: path=/etc/hosts.allow
+        owner=root
+        group=root
+        mode=0644
+
+- name: /etc/hosts.deny permissions
+  file: path=/etc/hosts.deny
+        owner=root
+        group=root
+        mode=0644

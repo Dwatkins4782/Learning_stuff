@@ -1,0 +1,63 @@
+---
+- name: Take care of rules about Satellite.
+  include: satellite.yml
+
+- name: Make sure no core dumps.
+  include: disable-core-dumps.yml
+
+- name: Remove unapproved packages if present.
+  include: packages.yml
+
+- name: Disable unapproved services.
+  include: services.yml
+
+- name: Set umask for daemons.
+  lineinfile: dest=/etc/sysconfig/init line="umask 027" state=present
+
+- name: Configure postfix for local-only.
+  include: postfix.yml
+
+# WARNING: This will be a big gotcha on systems that require X.
+- name: Task40 Make doubly sure X windows doesn't start. (We already removed it.)
+  file: src=/usr/lib/systemd/system/multi-user.target
+        dest=/usr/lib/systemd/system/default.target
+        force=yes
+        state=link
+
+- name: Task41 NTP hardening.
+  include: ntp.yml
+
+- name: Tasks42-48 Kernel Hardening.
+  include: sysctl.yml
+
+- name: /etc/hosts* permissions.
+  include: etc-hosts.yml
+
+- name: rsyslog config.
+  include: rsyslog.yml
+
+- name: cron config.
+  include: cron.yml
+
+# Going lazy on sshd_config right now, using a static file.
+- name: sshd config.
+  include: sshd.yml
+
+- name: Use SHA512 hashes for passwords.
+  include: authconfig.yml
+
+# HARD STOPPED @ #77
+
+- name: Task79 Restrict su access.
+  lineinfile: dest=/etc/pam.d/su
+              state=present
+              regexp='^#?auth\s+required\s+pam_wheel.so use_uid'
+              line='auth          required        pam_wheel.so use_uid'
+
+- name: Quick and dirty snmpd config
+  include: snmpd.yml
+
+# Warning: This needs to be run after any other authconfig tasks since changes may blow away system-auth
+# Also, this will need a re-write when we try to backport this rule...needs to be more surgical.
+- name: pwquality configuration. 
+  include: pwquality.yml

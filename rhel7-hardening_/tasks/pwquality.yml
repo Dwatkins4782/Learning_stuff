@@ -1,0 +1,14 @@
+---
+- name: Copy over pwquality.conf
+  copy: src=pwquality.conf
+        dest=/etc/security/pwquality.conf
+        owner=root
+        group=root
+        mode=0644
+
+- name: Copy over system-auth-ac
+  copy: src=system-auth-ac
+        dest=/etc/pam.d/system-auth-ac
+        owner=root
+        group=root
+        mode=0644

@@ -1,0 +1,31 @@
+---
+- name: Make sure cron is installed.
+  yum: name=cronie-anacron state=present
+
+- name: Set mode on anacrontab.
+  file: path=/etc/anacrontab
+        owner=root
+        group=root
+        mode=0600
+
+- name: Set mode on crontab.
+  file: path=/etc/crontab
+        owner=root
+        group=root
+        mode=0600
+
+- name: Set mode on the cron.* dirs.
+  file: "path={{ item }}
+        state=directory
+        owner=root
+        group=root
+        mode=0600"
+  with_items:
+    - /etc/cron.d/
+    - /etc/cron.hourly/
+    - /etc/cron.daily/
+    - /etc/cron.weekly/
+    - /etc/cron.monthly/
+
+- name: Enable the cron service.
+  service: name=crond enabled=yes state=started

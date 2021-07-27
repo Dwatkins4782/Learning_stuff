@@ -1,0 +1,12 @@
+---
+- name: Task19 Change limits.conf to disallow core dumps.
+  lineinfile: dest=/etc/security/limits.conf
+              state=present
+              regexp='\*\s+(hard|soft)\s+core\s+0'
+              line="*                {{ item }}    core            0"
+  with_items:
+    - hard
+    - soft
+
+- name: Task19 Also make sure setuid programs don't dump. 
+  sysctl: name=fs.suid_dumpable value=0 reload=yes  

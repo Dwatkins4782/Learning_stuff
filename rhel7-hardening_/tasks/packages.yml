@@ -1,0 +1,5 @@
+---
+- name: Tasks20-28 Remove unapproved packages.
+  yum: "name={{ item }} state=absent"
+  with_items: packages_absent
+

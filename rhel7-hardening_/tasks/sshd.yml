@@ -1,0 +1,18 @@
+---
+- name: Lazy copy of sshd_config
+  copy: src=sshd_config
+        dest=/etc/ssh/sshd_config
+        owner=root
+        group=root
+        mode=0600
+
+- name: Put banner in place... in ALL the places!
+  copy: "src=issue.net
+        dest={{ item }}
+        owner=root
+        group=root
+        mode=0644"
+  with_items:
+    - /etc/issue.net
+    - /etc/issue
+    - /etc/motd

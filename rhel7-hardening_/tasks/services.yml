@@ -1,0 +1,4 @@
+---
+- name: Tasks29-35 Disable unapproved services.
+  service: "name={{ item }} enabled=no state=stopped"
+  with_items: services_disabled

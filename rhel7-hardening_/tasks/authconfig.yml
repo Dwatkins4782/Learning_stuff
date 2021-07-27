@@ -1,0 +1,36 @@
+---
+- name: Use sha512 for password hashes.
+  lineinfile: dest=/etc/sysconfig/authconfig
+              regexp='^PASSWDALGORITHM\='
+              line='PASSWDALGORITHM=sha512'
+  register: authconfig
+
+#- name: Let's see if sha512 is already set.
+#  shell: "/sbin/authconfig --test |grep 'algorithm is sha512'"
+#  register: authconfig_grep
+#  # We have to ignore errors here because rc1 is a legitimate return.
+#  ignore_errors: yes
+#
+## Now we do our own error checking since we skipped above.
+#- name: Fail the play if authconfig_grep wasn't set. (This should ALWAYS skip.)
+#  fail: msg="authconfig_grep failed to register properly."
+#  when: (authconfig_grep.rc is not defined) or
+#        ("authconfig_grep.rc >= 2")
+#
+## The next block only executes if we changed the password hash algorithm.
+#
+#- name: Remediate authconfig setting if it was incorrect.
+#  shell: "authconfig --passalgo=512 --update"
+#  when: "authconfig_grep.rc != 0"
+#
+#
+# NOTE: I had to escape the escapes for ansible/yaml interpretation. If you want to use that grep string in bash,
+# change the double whacks to single whacks.
+- name: Grab a list of users that have old hashes.
+  shell: "grep -v '!!\\|\\*' /etc/shadow | awk -F: '{ print $1 }'"
+  register: oldhash_users
+  when: authconfig | changed
+
+- debug: "msg=WARNING: {{ item }} was found to have an old hash. Consider updating password or expiring account."
+  when: oldhash_users.stdout_lines is defined
+  with_items: oldhash_users.stdout_lines

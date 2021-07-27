@@ -1,0 +1,9 @@
+---
+# Task17: Ensure node is subscribed to satellite.
+
+- name: Task18 Ensure gpgcheck is enabled.
+  lineinfile: dest=/etc/yum.conf
+              state=present
+              line='gpgcheck=1'
+
+

@@ -1,0 +1,31 @@
+---
+- name: Ensure rsyslog installed
+  yum: name=rsyslog state=present
+
+- name: Ship everything to sva0057
+  lineinfile: dest=/etc/rsyslog.conf
+              state=present
+              line="*.*                                                     @sva0057.ercot.com:514"
+              insertbefore="^\# \#\#\# end of the forwarding rule \#\#\#"
+
+- name: Ship >=info to Taylor arcsight log collector.
+  lineinfile: dest=/etc/rsyslog.conf
+              state=present
+              line="*.info                                                  @t_arclinuxlogs.ercot.com"
+              insertbefore="^\# \#\#\# end of the forwarding rule \#\#\#"
+  when: city == 'Taylor'
+
+- name: Ship >=info to Bastrop arcsight log collector.
+  lineinfile: dest=/etc/rsyslog.conf
+              state=present
+              line="*.info                                                  @b_arclinuxlogs.ercot.com"
+              insertbefore="^\# \#\#\# end of the forwarding rule \#\#\#"
+  when: city == 'Bastrop'
+
+- name: Test to ensure one of our above conditions triggered.
+  shell: "cat /etc/rsyslog.conf |grep arclinux"
+  register: rsyslog_grep
+  failed_when: "rsyslog_grep.rc != 0"
+
+- name: Enable rsyslog.
+  service: name=rsyslog enabled=yes state=started

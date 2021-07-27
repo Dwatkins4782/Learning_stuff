@@ -1,0 +1,28 @@
+---
+packages_absent:
+  - telnet-server
+  - rsh-server
+  - rsh
+  - ypbind
+  - ypserv
+  - tftp
+  - tftp-server
+  - talk
+  - talk-server
+  - dhcp
+  - xorg-x11-server-common
+
+services_disabled:
+  - chargen-dgram
+  - chargen-stream
+  - daytime-dgram
+  - daytime-stream
+  - echo-dgram
+  - echo-stream
+  - tcpmux-server
+  - avahi-daemon
+
+ntpconf_lines:
+  - "server ercot.ntp.com iburst"
+  - "restrict default kod nomodify notrap nopeer noquery"
+  - "restrict -6 default kod nomodify notrap nopeer noquery"

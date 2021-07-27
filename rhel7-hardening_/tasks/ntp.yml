@@ -1,0 +1,14 @@
+---
+# This *should* be a simple additive to the existing Puppet-managed version.
+# But obviously we need to update the Puppet config since these lines will get blown away.
+
+- name: Ensure presence of options in /etc/ntp.conf.
+  lineinfile: dest=/etc/ntp.conf
+              state=present
+              "line={{ item }}"
+  with_items: ntpconf_lines
+
+- name: Correct options for /etc/sysconfig/ntpd.
+  lineinfile: dest=/etc/sysconfig/ntpd
+              state=present
+              line='OPTIONS="-u ntp:ntp -p /var/run/ntpd.pid -g"'

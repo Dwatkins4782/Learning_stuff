@@ -1,0 +1,10 @@
+---
+- name: Task39 Configure postfix for local-only mode.
+  lineinfile: dest=/etc/postfix/main.cf
+              state=present
+              line='inet_interfaces = localhost'
+  register: maincf
+
+- name: Restart postfix if we changed the config.
+  service: name=postfix state=restarted
+  when: maincf | changed
