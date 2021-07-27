@@ -1,0 +1,14 @@
+---
+- hosts: all
+  gather_facts: no
+  vars:
+    host_key_checking: false
+  tasks:
+
+  - name: Add file to /tmp
+    copy:
+      dest: /tmp/testfile
+      content: |
+        "this is test content"
+
+

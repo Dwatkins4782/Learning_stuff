@@ -1,0 +1,263 @@
+pipeline {
+    agent none
+    parameters {
+        string(name: 'VCENTER_NAME', defaultValue: "dvtvsvr0015.ercot.com", description: "target vcenter")
+        string(name: 'VM_ADMIN', defaultValue: "scorchprod", description: "vmware account")
+        string(name: 'VM_ADMIN_PASSWORD', defaultValue: "Freeze2021!", description: "vmware account password")
+        string(name: 'VM_NAME', defaultValue: "linuxansibletest01", description: "vm name")
+        string(name: 'VM_TEMPLATE', defaultValue: "TEMPLATE-RHEL7-64", description: "VM template")
+        string(name: 'DATACENTER', defaultValue: "Lab", description: "VMware Datacenter")
+        string(name: 'CLUSTER', defaultValue: "Lab-Cluster", description: "VMware cluster")
+        string(name: 'VM_FOLDER', defaultValue: "CIA", description: "Vmware Folder")
+        string(name: 'NUM_CPUS', defaultValue: "2", description: "number of CPU")
+        string(name: 'NUM_CORES_SOCKET', defaultValue: "2", description: "number of cores per socket")
+        string(name: 'MB_RAM', defaultValue: "8192", description: "RAM value")
+        string(name: 'PORT_GROUP', defaultValue: "lab-285", description: "VMWare port group")
+        string(name: 'VM_IP', defaultValue: "10.5.6.105", description: "VM IP")
+        string(name: 'VM_NETMASK', defaultValue: "255.255.255.0", description: "VM netmask")
+        string(name: 'VM_GATEWAY', defaultValue: "10.5.6.1", description: "vm gateway")
+        string(name: 'DOMAIN', defaultValue: 'lab.ercot.com', description: "VM domain")
+        string(name: 'DNS_1', defaultValue: '10.29.0.206', description: "VM dns value 1")
+        string(name: 'DNS_2', defaultValue: '""', description: "VM dns value 2")
+        string(name: 'CLUSTER_NAME', defaultValue: "devk8s.ercot.com", description: "cluster to deploy tests to")
+
+    }
+    stages {
+        stage('Build VM') {
+            agent any
+            steps {
+                ansibleTower(
+                    towerServer: 'Dev Tower',
+                    towerCredentialsId: 'jenkins-tower-token',
+                    templateType: 'job',
+                    jobTemplate: 'Build_LAB_Linux_VM',
+                    towerLogLevel: 'full',
+                    inventory: 'localhost',
+                    verbose: true,
+                    extraVars: """---
+vcenter_name: ${params.VCENTER_NAME}
+vm_admin: ${params.VM_ADMIN}
+vm_admin_password: ${params.VM_ADMIN_PASSWORD}
+vm_name: ${params.VM_NAME}
+vm_template: ${params.VM_TEMPLATE}
+datacenter: ${params.DATACENTER}
+cluster: ${params.CLUSTER}
+vm_folder: ${params.VM_FOLDER}
+num_cpus: ${params.NUM_CPUS}
+num_cores_socket: ${params.NUM_CORES_SOCKET}
+mb_ram: ${params.MB_RAM}
+port_group: ${params.PORT_GROUP}
+vm_ip: ${params.VM_IP}
+vm_netmask: ${params.VM_NETMASK}
+vm_gateway: ${params.VM_GATEWAY}
+domain: ${params.DOMAIN}
+dns_1: ${params.DNS_1}
+dns_2: ${params.DNS_2}"""
+                )
+            }
+        }
+        stage('Get SCM Credential ID') {
+            agent any
+            steps {
+                script {
+                    env.SCM_CREDENTIAL_ID = sh (
+                        script: """curl -H "Content-Type:application/json" -X GET -k https://sysmgr:Freeze2021%21@dvtlsdt0030.ercot.com/api/v2/credentials/?search=sysmgr_git""",
+                        returnStdout: true
+                    ).trim().split(':')[5].split(",")[0]
+                }
+                sh """echo ${env.SCM_CREDENTIAL_ID}"""
+            }
+        }
+
+        stage('Create Tower Inventory') {
+            agent any
+            steps {
+                script {
+                    env.INVENTORY_ID = sh (
+                        script: """curl -X POST -d '{"name": "API Inventory", "description": "Inventory from API", "organization": 3 ,"host_filter":"name=10.5.6.105"}' -H "Content-Type:application/json" -k https://sysmgr:Freeze2021%21@dvtlsdt0030.ercot.com/api/v2/inventories/""",
+                        returnStdout: true
+                    ).trim().split(',')[0].split(':')[1]
+                }    
+                sh """curl -X POST -d '{"name": "10.5.6.105", "description": "host from API", "enabled": true, "inventory":"${env.INVENTORY_ID}"}' -H "Content-Type:application/json" -k https://sysmgr:Freeze2021%21@dvtlsdt0030.ercot.com/api/v2/hosts/"""
+            }
+        }
+
+        stage('Get Organization') {
+            agent any
+            steps {
+                script {
+                    env.ORGANIZATION_ID = sh (
+                        script: """curl -H "Content-Type:application/json" -X GET -k https://sysmgr:Freeze2021%21@dvtlsdt0030.ercot.com/api/v2/organizations/?search=Dept_366""",
+                        returnStdout: true
+                    ).trim().split(':')[5].split(',')[0]
+                }
+                sh """echo ${env.ORGANIZATION_ID}"""
+            }
+        }
+
+        stage('Create Tower Project') {
+            agent any
+            steps {
+                script {
+                    env.PROJECT_ID = sh (
+                        script: """curl -X POST -d '{"allow_override": true, "name": "Anisble_Pipeline_Test", "organization": ${env.ORGANIZATION_ID}, "scm_type": "git", "scm_url": "ssh://git@git.ercot.com:7999/cia/playbook-pipeline.git", "scm_branch": "master", "credential": ${env.SCM_CREDENTIAL_ID}, "scm_update_on_launch": true}' -H "Content-Type:application/json" -k https://sysmgr:Freeze2021%21@dvtlsdt0030.ercot.com/api/v2/projects/""",
+                        returnStdout: true
+                    ).trim().split(',')[0].split(':')[1]
+                }
+            }
+        }
+
+        stage('Update Project') {
+            agent any
+            steps {
+                sh """curl -X POST -k https://sysmgr:Freeze2021%21@dvtlsdt0030.ercot.com/api/v2/projects/${env.PROJECT_ID}/update/"""
+            }
+        }
+
+        stage('Create Tower Template') {
+            agent any
+            steps {
+                script {
+                    env.TEMPLATE_ID = sh (
+                        script: """curl -H "Content-Type:application/json" -X POST -k https://sysmgr:Freeze2021%21@dvtlsdt0030.ercot.com/api/v2/job_templates/ -d '{"name": "Test_Template", "job_type": "run", "project": ${env.PROJECT_ID}, "playbook": "playbook.yml", "ask_inventory_on_launch": true}'""",
+                        returnStdout: true
+                    ).trim().split(',')[0].split(':')[1]
+                }
+                sh """echo ${env.TEMPLATE_ID}"""
+            }
+        }
+
+        stage('Get LAB Linux Credential') {
+            agent any
+            steps {
+                script {
+                    env.CREDENTIAL_ID = sh (
+                        script: """curl -X GET -H "Content-Type:application/json" -k https://sysmgr:Freeze2021%21@dvtlsdt0030.ercot.com/api/v2/credentials/?search=LABLinux""",
+                        returnStdout: true
+                    ).trim().split(':')[5].split(',')[0]
+                }
+                sh """echo ${env.CREDENTIAL_ID}"""
+            }
+        }
+
+        stage('Add Template Credential') {
+            agent any
+            steps {
+                sh """curl -H "Content-Type:application/json" -X POST -k https://sysmgr:Freeze2021%21@dvtlsdt0030.ercot.com/api/v2/job_templates/${env.TEMPLATE_ID}/credentials/ -d '{"credential_type": 1, "id": ${env.CREDENTIAL_ID}}'"""
+            }
+        }
+
+        stage('Execute Playbook') {
+            agent any
+            steps {
+                ansibleTower(
+                    towerServer: 'Dev Tower',
+                    towerCredentialsId: 'jenkins-tower-token',
+                    templateType: 'job',
+                    jobTemplate: 'Test_Template',
+                    towerLogLevel: 'full',
+                    inventory: 'API Inventory',
+                    verbose: true,
+                    extraVars: """---
+host_key_checking: False
+ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'"""
+                )
+            }
+        }
+        stage('Build Tests') {
+            agent {
+                kubernetes {yamlFile 'build-environment.yaml'}
+            }
+            environment {
+                ARTIFACT_REPOSITORY_CREDS = credentials('JENKINS_SERVICE_ACCOUNT')
+                IMAGE_NAME = 'docker.repo.ercot.com/ercot/ansible-tests'
+            }
+            steps {
+                container('buildah') {
+                    sh '''
+                        hadolint --no-color --no-fail --format json --require-label maintainer --require-label projectId ./tests/Dockerfile >> hadolint-results.json
+                        buildah bud --format=docker -f ./tests/Dockerfile --pull-always --no-cache --creds ${ARTIFACT_REPOSITORY_CREDS_USR}:${ARTIFACT_REPOSITORY_CREDS_PSW} --tag ${IMAGE_NAME}:latest --tag ${IMAGE_NAME}:${GIT_COMMIT} ./tests
+                        buildah push --creds ${ARTIFACT_REPOSITORY_CREDS_USR}:${ARTIFACT_REPOSITORY_CREDS_PSW} ${IMAGE_NAME}:latest
+                        buildah push --creds ${ARTIFACT_REPOSITORY_CREDS_USR}:${ARTIFACT_REPOSITORY_CREDS_PSW} ${IMAGE_NAME}:${GIT_COMMIT}
+                       ''' 
+                }
+            }
+        }
+        stage('Deploy Tests') {
+            agent {
+                kubernetes {yamlFile 'ocbuild-environment.yaml'}
+            }
+            steps {
+                container('clientbase') {
+                    sh """
+                        export KUBECONFIG=/tmp/.kube/config
+                        oc login --insecure-skip-tls-verify https://api.${params.CLUSTER_NAME}:6443 -u=sysmgr -p=Freeze2021!
+                        oc apply -f ./tests/service.yaml
+                    """
+                }
+            }
+        }
+        stage('Wait for Test Deployment') {
+            agent any
+            steps {
+                echo 'Waiting 20 seconds'
+                sleep 20
+            }
+        }
+        stage('Execute Tests') {
+            agent any
+            steps {
+                script {
+                    env.TEST_OUTPUT = sh (
+                        script: """curl -H "Content-Type application/json" -X POST http://pipeline-playbook-demo-orchestration-itds.apps.devk8s.ercot.com/testfile -d \'{"ip": "${params.VM_IP}"}\'""",
+                        returnStdout: true
+                    ).trim()
+                }
+                println "${env.TEST_OUTPUT}" 
+            }
+        }
+        stage('Check Test Results') {
+            when {
+                expression {"${env.TEST_OUTPUT}" ==~ "passed"}
+            }
+            steps {
+                script {
+                    error 'Test Failure'
+                }
+            }    
+        }
+        stage('Remove Test') {
+            agent {
+                kubernetes {yamlFile 'ocbuild-environment.yaml'}
+            }
+            steps {
+                container('clientbase') {
+                    sh """
+                        export KUBECONFIG=/tmp/.kube/config
+                        oc login --insecure-skip-tls-verify https://api.${params.CLUSTER_NAME}:6443 -u=sysmgr -p=Freeze2021!
+                        oc delete -f ./tests/service.yaml
+                    """
+                }
+            }
+        }
+        stage('Delete Lab VM') {
+            agent any
+            steps {
+                ansibleTower(
+                    towerServer: 'Dev Tower',
+                    towerCredentialsId: 'jenkins-tower-token',
+                    templateType: 'job',
+                    jobTemplate: 'Decom_LAB_VM',
+                    towerLogLevel: 'full',
+                    inventory: 'localhost',
+                    verbose: true,
+                    extraVars: """---
+vcenter_hostname: ${params.VCENTER_NAME}
+vcenter_username: ${params.VM_ADMIN}
+vcenter_password: ${params.VM_ADMIN_PASSWORD}
+inventory_hostname: ${params.VM_NAME}"""
+                )
+            }
+        }
+    }
+}
