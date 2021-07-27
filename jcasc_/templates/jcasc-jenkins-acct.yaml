@@ -1,0 +1,18 @@
+## ROLE-BINDING ##
+{{- include "rolebinding.version" . }}
+kind: "ClusterRoleBinding"
+metadata:
+  name: "{{.Release.Name}}-jenkins"
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    {{- include "jcasc.labels" . | indent 4 }}
+  annotations:
+    {{- include "jcasc.tracking.annotation" . | indent 4 }}
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "system:openshift:scc:privileged"
+subjects:
+  - kind: "ServiceAccount"
+    name: "jenkins"
+    namespace: "{{ .Release.Namespace }}"

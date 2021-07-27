@@ -1,0 +1,24 @@
+jcasc:
+# OPTIONAL
+# The scm field specifies the scm URL for the jenkins-jcasc module.
+# Defaults to "ssh://git@git.ercot.com:7999/cicd/jcasc.git"
+  scm: "ssh://git@git.ercot.com:7999/cicd/jcasc.git"
+
+# OPTIONAL
+# The component field specifies the component name for pieces of the jenkins-jcasc
+# deployment. Defaults to "jcasc"
+  component: "jcasc"
+
+# REQUIRED
+# The username field specifies the service account username used to authenticate by
+# jcasc-jenkins.
+  username:
+
+# REQUIRED
+# The password field specifies the service account password used to authenticate by
+# jcasc-jenkins.
+  password:
+
+# REQUIRED
+# The sshKey field specifies the ssh key used to authenticate to bitbucket.
+  sshKey:

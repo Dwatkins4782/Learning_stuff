@@ -1,0 +1,46 @@
+pipeline {
+    agent {
+        kubernetes {yamlFile 'build-environment.yaml'}
+    }
+
+    stages {
+        stage('Dependency Report') {
+            steps {                    
+                container('java') {
+                    sh 'mvn --batch-mode --show-version --fail-at-end versions:display-property-updates --no-snapshot-updates'
+                }
+            }
+        }
+
+        stage('Product Build') {
+            steps {
+                container('java') {
+                    sh 'mvn --batch-mode --show-version --fail-at-end <MAVEN_COMMAND>'
+                }
+            }
+        }
+
+        stage('Static/Test Analysis') {
+            steps {
+                jacoco exclusionPattern: '**/generated/**/*'
+                recordIssues enabledForFailure: true, tools: [mavenConsole(), java(), javaDoc(), junitParser(pattern: '**/target/surefire-reports/TEST-*.xml'), checkStyle(pattern: '**/target/checkstyle-result.xml'), spotBugs(useRankAsPriority: true, pattern: '**/target/spotbugsXml.xml'), cpd(pattern: '**/target/cpd.xml'), pmdParser(pattern: '**/target/pmd.xml')]
+            }
+        }
+
+        stage('Archive') {
+            steps {
+                archiveArtifacts artifacts: '<ARTIFACT_EXTENSIONS>'
+            }
+        }
+    }
+
+    post {
+        always {
+            emailext (
+                subject: "Jenkins Job Notification'${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                body: "Check console output at ${env.BUILD_URL}",
+                recipientProviders: [developers(), requestor(), culprits()]
+            )
+        }
+    }
+}

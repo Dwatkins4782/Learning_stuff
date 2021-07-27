@@ -1,0 +1,47 @@
+pipeline {
+    agent {
+        kubernetes {yamlFile 'build-environment.yaml'}
+    }
+    
+    environment {
+        IMAGE_NAME = 'docker.repo.ercot.com/ercot/<IMAGE_NAME>'
+    }
+
+    stages {
+
+        stage('Image Build/Push') {
+            environment {
+                ARTIFACT_REPOSITORY_CREDS = credentials('JENKINS_SERVICE_ACCOUNT')
+            }
+
+            steps {
+                container('buildah') {
+                    sh '''
+                        hadolint --no-color --no-fail --format json --require-label maintainer --require-label projectId Dockerfile >> hadolint-results.json
+                        buildah bud --format=docker --pull-always --no-cache --creds ${ARTIFACT_REPOSITORY_CREDS_USR}:${ARTIFACT_REPOSITORY_CREDS_PSW} --tag ${IMAGE_NAME}:latest --tag ${IMAGE_NAME}:${GIT_COMMIT} .
+                        buildah push --creds ${ARTIFACT_REPOSITORY_CREDS_USR}:${ARTIFACT_REPOSITORY_CREDS_PSW} ${IMAGE_NAME}:latest
+                        buildah push --creds ${ARTIFACT_REPOSITORY_CREDS_USR}:${ARTIFACT_REPOSITORY_CREDS_PSW} ${IMAGE_NAME}:${GIT_COMMIT}
+                       '''
+                }
+            }
+        }
+
+        stage('Static Analysis') {
+            steps {
+                recordIssues enabledForFailure: true, tools: [hadoLint(pattern: 'hadolint-results.json')]
+            }
+        }
+
+    }
+
+    post {
+        always {
+            emailext (
+                subject: "Jenkins Job Notification '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                body: "Check console output at ${env.BUILD_URL}",
+                attachLog: true,
+                recipientProviders: [buildUser(), developers(), requestor(), culprits()]
+            )
+        }
+    }
+}

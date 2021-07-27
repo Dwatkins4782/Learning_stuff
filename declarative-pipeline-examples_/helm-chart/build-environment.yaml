@@ -1,0 +1,28 @@
+apiVersion: "v1"
+kind: "Pod"
+metadata:
+  annotations:
+    ercot.com/product: "jenkins"
+    ercot.com/jenkins-agent: "helm"
+    ercot.com/helm-version: "3.5.0"
+spec:
+  containers:
+  - name: "jnlp"
+    image: "docker.repo.ercot.com/ercot/jenkins/agent/inbound:latest"
+    imagePullPolicy: "Always"
+    tty: false
+    resources:
+      limits:
+        memory: 1000Mi
+        cpu: 1000m
+  - name: "helm"
+    image: "docker.repo.ercot.com/ercot/jenkins/agent/helm:latest"
+    imagePullPolicy: "Always"
+    tty: true
+    securityContext:
+      runAsUser: "1000"
+      runAsGroup: "1000"
+    resources:
+      limits:
+        memory: 1000Mi
+        cpu: 1000m

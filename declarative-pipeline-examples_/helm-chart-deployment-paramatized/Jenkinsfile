@@ -1,0 +1,63 @@
+pipeline {
+    agent {
+        kubernetes {yamlFile 'build-environment.yaml'}
+    }
+    
+    parameters {
+        string(name: 'ItcmIssue', description: 'ITCM RFC/DR Issue Number.')
+
+        string(name: 'DeploymentCluster', description: 'OpenShift cluster name.')
+
+        string(name: 'ChartRepositoryUrl', description: 'URL for the Helm chart repository.')
+
+        string(name: 'ChartName', description: 'Name of the Helm chart to deploy.')
+
+        string(name: 'ChartVersion', description: 'Version number of the Helm chart to deploy.')
+
+        string(name: 'ReleaseName', description: 'Name of the release the Helm chart should be deployed as.')
+
+        string(name: 'Namespace', description: 'Kubernetes namespace where the chart should be deployed.')
+
+        string(name: 'ConfigRepo', description: 'Git repository where Helm chart configuration is stored.')
+
+        string(name: 'ConfigRepoBranch', description: 'Git repository branch where Helm chart configuration is stored.')
+        
+    }
+
+    stages {
+        stage('Checkout Configuration') {
+            steps {
+                git url: params.ConfigRepo, branch: params.ConfigRepoBranch, credentialsId: 'JENKINS_SERVICE_ACCOUNT_SSH'
+            }
+        }
+
+        stage('Helm Chart Deployment') {
+            environment {
+                DEPLOYER_ACCOUNT = credentials('JENKINS_SERVICE_ACCOUNT')
+            }
+
+            steps {
+                container('helm') {
+                    sh '''
+                        oc login ''' + params.DeploymentCluster + ''':6443 --username=${DEPLOYER_ACCOUNT_USR} --password=${DEPLOYER_ACCOUNT_PSW} --insecure-skip-tls-verify=true
+                        helm repo add deployment ''' + params.ChartRepositoryUrl + '''
+                        helm repo update
+                        helm upgrade ''' + params.ReleaseName + ''' deployment/''' + params.ChartName + ''' --version ''' + params.ChartVersion + ''' --install --values configuration.yaml --atomic --create-namespace --namespace ''' + params.Namespace + ''' --debug --dry-run
+                        helm upgrade ''' + params.ReleaseName + ''' deployment/''' + params.ChartName + ''' --version ''' + params.ChartVersion + ''' --install --values configuration.yaml --atomic --create-namespace --namespace ''' + params.Namespace + ''' --debug --dry-run
+                        oc logout
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            emailext (
+                subject: "Jenkins Job Notification ITCM RFC/DR Deployment '${env.JOB_NAME} [${env.BUILD_NUMBER}]' " + params.ItcmIssue,
+                body: "Check console output at ${env.BUILD_URL}",
+                recipientProviders: [developers(), requestor(), culprits()]
+            )
+        }
+    }
+}

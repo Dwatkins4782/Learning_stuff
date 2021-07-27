@@ -1,0 +1,30 @@
+## SERVICE-ACCOUNT ##
+{{- include "svcacct.version" . }}
+kind: "ServiceAccount"
+metadata:
+  name: "jenkins-deployer"
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    {{- include "jcasc.labels" . | indent 4 }}
+  annotations:
+    {{- include "jcasc.tracking.annotation" . | indent 4 }}
+
+---
+## ROLE-BINDING ##
+{{- include "rolebinding.version" . }}
+kind: "ClusterRoleBinding"
+metadata:
+  name: "{{.Release.Name}}-jenkins-deployer"
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    {{- include "jcasc.labels" . | indent 4 }}
+  annotations:
+    {{- include "jcasc.tracking.annotation" . | indent 4 }}
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "cluster-admin"
+subjects:
+  - kind: "ServiceAccount"
+    name: "jenkins-deployer"
+    namespace: "{{ .Release.Namespace }}"

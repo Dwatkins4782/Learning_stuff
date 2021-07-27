@@ -1,0 +1,50 @@
+pipeline {
+    agent {
+        kubernetes {yamlFile 'build-environment.yaml'}
+    }
+
+    stages {
+        
+        stage('Chart Build') {
+            steps {
+                container('helm') {
+                    sh '''
+                        helm repo add ercot-charts https://repo.ercot.com/artifactory/helm
+                        helm repo update
+                        helm dependency update
+                        helm package --version 2.1.${BUILD_NUMBER} --appVersion LTS
+                    '''   
+                }
+            }
+        }
+        
+        stage('Chart Push') {
+            environment {
+                ARTIFACT_REPOSITORY_CREDS = credentials('JENKINS_SERVICE_ACCOUNT')
+            }
+
+            steps {
+                container('helm') {
+                    sh 'curl --fail --user $ARTIFACT_REPOSITORY_CREDS_USERNAME:$ARTIFACT_REPOSITORY_CREDS_PASSWORD https://repo.ercot.com/artifactory/helm/ --upload-file jcasc-2.1.${BUILD_NUMBER}.tgz'
+                }
+            }
+        }
+
+        stage('Archive') {
+            steps {
+                archiveArtifacts artifacts: '*.tgz'
+            }
+        }
+    }
+
+    post {
+        always {
+            emailext (
+                subject: "Jenkins Job Notification '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                body: "Check console output at ${env.BUILD_URL}",
+                attachLog: true,
+                recipientProviders: [buildUser(), developers(), requestor(), culprits()] 
+            )
+        }
+    }
+}

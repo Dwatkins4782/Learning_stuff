@@ -1,0 +1,36 @@
+{{- if .Values.jcasc.np.enabled -}}
+## NETWORK POLICY ##
+{{ if .Capabilities.APIVersions.Has "networking.k8s.io/v1" }}
+{{- include "np.version" . }}
+kind: NetworkPolicy
+metadata:
+  name: "{{.Release.Name}}-network-policy"
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    {{- include "jcasc.labels" . | indent 4 }}
+  annotations:
+    {{- include "jcasc.tracking.annotation" . | indent 4 }}
+spec:
+  podSelector: {}
+  ingress:
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            openshift.io/cluster-monitoring: 'true'
+    - ports:
+      - protocol: TCP
+        port: 8080
+      from:
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: ingress
+  egress:
+{{ toYaml .Values.jcasc.egress | indent 2 }}
+{{- if .Values.jcasc.additionalEgress }}  
+{{ toYaml .Values.jcasc.additionalEgress | indent 2 }}
+{{- end }}
+  policyTypes:
+  - Ingress
+  - Egress
+{{ end }}
+{{- end }}

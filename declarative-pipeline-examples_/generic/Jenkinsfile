@@ -1,0 +1,33 @@
+pipeline {
+    agent {
+        kubernetes {yamlFile 'build-environment.yaml'}
+    }
+    
+    stages {
+        
+        stage('Generic Build/Push') {
+            steps {
+                container('base') {
+                    sh 'find . -type f -path .git -prune -o -exec dos2unix {} \\; && chmod +x <BUILD_SCRIPT_NAME> && ./<BUILD_SCRIPT_NAME>'   
+                }
+            }
+        }
+        
+        stage('Archive') {
+            steps {
+                archiveArtifacts artifacts: '<ARTIFACT_EXTENSIONS>'
+            }
+        }
+    }
+
+    post {
+        always {
+            emailext (
+                subject: "Jenkins Job Notification '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                body: "Check console output at ${env.BUILD_URL}",
+                attachLog: true,
+                recipientProviders: [buildUser(), developers(), requestor(), culprits()]
+            )
+        }
+    }
+}

@@ -1,0 +1,49 @@
+pipeline {
+    agent {
+        kubernetes {yamlFile 'build-environment.yaml'}
+    }
+
+    stages {
+        
+        stage('Chart Push') {
+            environment {
+                ARTIFACT_REPOSITORY_CREDS = credentials('JENKINS_SERVICE_ACCOUNT')
+            }
+
+            steps {
+                container('helm') {
+                    sh 'helm package --appVersion 1.0.${BUILD_NUMBER}'   
+                }
+            }
+        }
+        
+        stage('Chart Push') {
+            environment {
+                ARTIFACT_REPOSITORY_CREDS = credentials('JENKINS_SERVICE_ACCOUNT')
+            }
+
+            steps {
+                container('helm') {
+                    sh ''   
+                }
+            }
+        }
+
+        stage('Archive') {
+            steps {
+                archiveArtifacts artifacts: '*.tgz'
+            }
+        }
+    }
+
+    post {
+        always {
+            emailext (
+                subject: "Jenkins Job Notification '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                body: "Check console output at ${env.BUILD_URL}",
+                attachLog: true,
+                recipientProviders: [buildUser(), developers(), requestor(), culprits()]
+            )
+        }
+    }
+}

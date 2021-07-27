@@ -1,0 +1,9 @@
+apiVersion: v2
+appVersion: "lts"
+description: "CI/CD Services Helm Chart"
+name: "jcasc"
+version: "0.0.1"
+dependencies:
+- name: jenkins
+  version: 3.3.22
+  repository: https://repo.ercot.com/artifactory/helm
