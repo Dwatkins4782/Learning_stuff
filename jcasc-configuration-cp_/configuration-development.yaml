@@ -1,0 +1,9 @@
+jenkins:
+  clusterZone: "apps.devk8s.ercot.com"
+  controller:
+    jenkinsUrl: "https://jenkins-cp.apps.devk8s.ercot.com"
+    route:
+      path: "jenkins-cp.apps.devk8s.ercot.com"
+  agent:
+    jenkinsUrl: "http://jenkins-cp:8080"
+    jenkinsTunnel: "jenkins-cp-agent:50000"
