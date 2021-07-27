@@ -1,0 +1,88 @@
+# Create an OSEv3 group that contains the masters, nodes, and etcd groups
+[OSEv3:children]
+masters
+nodes
+etcd
+
+# Set variables common for all OSEv3 hosts
+[OSEv3:vars]
+# SSH user, this user should allow ssh based auth without requiring a password
+ansible_ssh_user=cpomeroy
+openshift_examples_modify_imagestreams=true
+openshift_enable_unsupported_configurations=True
+oreg_url=dev-registry.ercot.com/openshift/origin-${component}:${version}
+oreg_auth_user=jenkins
+oreg_auth_password=ContinuousIntegration2k19!
+oreg_test_login=False
+openshift_docker_insecure_registries=dev-registry.ercot.com
+openshift_disable_check=memory_availability,disk_availability
+
+# If ansible_ssh_user is not root, ansible_become must be set to true
+ansible_become=true
+openshift_master_cluster_method=native
+openshift_master_cluster_hostname=dev-okd-master.ercot.com
+openshift_master_cluster_public_hostname=dev-okd-master.ercot.com
+
+openshift_deployment_type=origin
+openshift_master_default_subdomain=devokd.ercot.com
+openshift_master_identity_providers=[{'name': 'ldap_provider', 'challenge': 'true', 'login': 'true', 'kind': 'LDAPPasswordIdentityProvider', 'attributes': {'id': ['dn'], 'email': ['mail'], 'name': ['cn'], 'preferredUsername': ['uid']}, 'bindDN': 'CN=ucs_ldap,OU=ERCOT SERVICE ACCOUNTS,OU=ERCOT USERS,DC=ercot,DC=com', 'bindPassword': 'MustangsRBetter03', 'insecure': 'false', 'url': 'ldaps://ercot.com:636/dc=ercot,dc=com?sAMAccountName?sub'}]
+openshift_master_ldap_ca_file=/home/cpomeroy/openshift-ansible/rootca.pem
+
+# openshift_storage_glusterfs_namespace=app-storage
+# openshift_storage_glusterfs_storageclass=true
+# openshift_storage_glusterfs_storageclass_default=false
+# openshift_storage_glusterfs_block_deploy=true
+# openshift_storage_glusterfs_block_host_vol_size=100
+# openshift_storage_glusterfs_block_storageclass=true
+# openshift_storage_glusterfs_block_storageclass_default=false
+
+# openshift_hosted_registry_storage_kind=nfs
+# openshift_hosted_registry_storage_access_modes=['ReadWriteMany']
+# openshift_hosted_registry_storage_host=t1corp-nas-dev.ercot.com
+# openshift_hosted_registry_storage_nfs_options='*(rw,root_squash)'
+# openshift_hosted_registry_storage_nfs_directory=/docker/docker_files
+# openshift_hosted_registry_storage_volume_name=registry
+# openshift_hosted_registry_storage_volume_size=64Gi
+
+openshift_metrics_install_metrics=true
+
+openshift_logging_install_logging=true
+openshift_logging_use_ops=false
+openshift_logging_es_nodeselector={"node-role.kubernetes.io/infra":"true" }
+openshift_logging_es_ops_nodeselector={"node-role.kubernetes.io/infra":"true" }
+openshift_logging_es_pvc_dynamic=true
+openshift_logging_es_memory_limit=4G
+
+
+osm_clsuter_network_cidr=172.31.0.0/16
+osm_host_subnet_length=8
+
+os_sdn_network_plugin_name=redhat/openshift-ovs-multitenant
+
+# uncomment the following to enable htpasswd authentication; defaults to AllowAllPasswordIdentityProvider
+#openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider'}]\
+# host group for masters
+[masters]
+dvtlsdt0014.ercot.com
+dvtlsdt0015.ercot.com
+dvtlsdt0016.ercot.com
+
+[etcd]
+dvtlsdt0014.ercot.com
+dvtlsdt0015.ercot.com
+dvtlsdt0016.ercot.com
+
+#[nfs]
+#dvtlsdt0014.ercot.com
+
+# host group for nodes, includes region info
+[nodes]
+dvtlsdt0014.ercot.com openshift_node_group_name='node-config-master'
+dvtlsdt0015.ercot.com openshift_node_group_name='node-config-master'
+dvtlsdt0016.ercot.com openshift_node_group_name='node-config-master'
+dvtlsdt0017.ercot.com openshift_node_group_name='node-config-infra'
+dvtlsdt0020a.ercot.com openshift_node_group_name='node-config-infra'
+dvtlsdt0020b.ercot.com openshift_node_group_name='node-config-infra'
+dvtlsdt0020c.ercot.com openshift_node_group_name='node-config-compute'
+dvtlsdt0020d.ercot.com openshift_node_group_name='node-config-compute'
+dvtlsdt0020e.ercot.com openshift_node_group_name='node-config-compute'
