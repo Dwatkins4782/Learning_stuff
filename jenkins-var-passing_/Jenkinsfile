@@ -1,0 +1,46 @@
+// Uses Declarative syntax to run commands inside a container.
+pipeline {
+    agent {
+        kubernetes {
+            yaml '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: ansible
+    image: dev-registry.ercot.com/ercot/jenkins/ansible-agent:latest
+    command:
+    - sleep
+    args:
+    - infinity
+'''
+
+            defaultContainer 'ansible'
+        }
+    }
+    environment {
+        mybutt = ''
+    }
+    stages {
+        stage('Setup') {
+            steps {
+                sh 'echo dogsbollocks > mybutt.txt'
+                script {
+                    mybutt = readFile('mybutt.txt').trim()
+                }
+                echo "${mybutt}"
+            }
+        }
+        stage('Main') {
+            steps {
+
+                ansiblePlaybook(
+                    playbook: './playbook.yml',
+                    inventory: './hosts.ini',
+                    extraVars: [
+                        mybuttValue: "${mybutt}"
+                    ])
+            }
+        }
+    }
+}
