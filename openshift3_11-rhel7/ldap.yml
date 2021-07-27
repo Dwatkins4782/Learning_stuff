@@ -1,0 +1,28 @@
+# LDAP is case insensitive, but OpenShift is not, so all LDAP parameters have been converted to lower case as per https://access.redhat.com/solutions/3232051 (under "Case Sensitivity")
+kind: LDAPSyncConfig
+apiVersion: v1
+url: ldap://ercot.com:389
+insecure: true
+ca: ""
+bindDN: "CN=ucs_ldap,OU=ERCOT SERVICE ACCOUNTS,OU=ERCOT USERS,DC=ercot,DC=com"
+bindPassword: 'DamnYouP0meroy!'
+rfc2307:
+    groupsQuery:
+        baseDN: "OU=Security Groups,DC=ercot,DC=com"
+        scope: sub
+        filter: (cn=cit automation)
+        derefAliases: never
+        timeout: 0
+        pageSize: 0
+    groupUIDAttribute: dn
+    groupNameAttributes: [ cn ]
+    groupMembershipAttributes: [ member ]
+    usersQuery:
+        basedn: "dc=ercot,dc=com"
+        scope: sub
+        derefAliases: never
+        pageSize: 0
+    userUIDAttribute: dn
+    userNameAttributes: [ sAMAccountName ]
+    tolerateMemberNotFoundErrors: true
+    tolerateMemberOutOfScopeErrors: true

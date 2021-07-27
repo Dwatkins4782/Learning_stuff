@@ -1,0 +1,86 @@
+# Create an OSEv3 group that contains the masters, nodes, and etcd groups
+[OSEv3:children]
+masters
+nodes
+etcd
+
+# Set variables common for all OSEv3 hosts
+[OSEv3:vars]
+# SSH user, this user should allow ssh based auth without requiring a password
+ansible_ssh_user=root
+
+
+#openshift_master_dynamic_provisioning_enabled=True
+
+# If ansible_ssh_user is not root, ansible_become must be set to true
+#ansible_become=true
+
+openshift_deployment_type=origin
+
+openshift_cluster_monitoring_operator_install=false
+
+oreg_url=dev-registry.ercot.com/openshift/origin-${component}:${version}
+
+openshift_examples_modify_imagestreams=true
+
+# NOTE: if openshift_enable_service_catalog (below) is set to true, cluster will hang on start, trying to reach the mothership
+openshift_enable_service_catalog=false
+
+os_sdn_network_plugin_name=redhat/openshift-ovs-multitenant
+osm_cluster_network_cidr=172.31.0.0/16
+osm_host_subnet_length=8
+
+
+openshift_master_cluster_method=native
+
+openshift_master_cluster_hostname=labvsdt0001.lab.ercot.com
+openshift_master_cluster_public_hostname=labrhelk8s.lab.ercot.com
+
+openshift_master_default_subdomain=labrhelk8s.lab.ercot.com
+
+
+openshift_enable_unsupported_configurations=True
+
+openshift_docker_insecure_registries=dev-registry.ercot.com
+
+
+#openshift_web_console_nodeselector={'role': 'infra'}
+
+openshift_master_identity_providers=[{'name': 'ldap_provider', 'challenge': 'true', 'login': 'true', 'kind': 'LDAPPasswordIdentityProvider', 'attributes': {'id': ['dn'], 'email': ['mail'], 'name': ['cn'], 'preferredUsername': ['uid']}, 'bindDN': 'CN=ucs_ldap,OU=ERCOT SERVICE ACCOUNTS,OU=ERCOT USERS,DC=ercot,DC=com', 'bindPassword': 'DamnYouP0meroy!', 'insecure': 'true', 'url': 'ldap://ercot.com:389/dc=ercot,dc=com'}]
+#openshift_master_ldap_ca_file=/etc/pki/ca-trust/source/anchors/ERCOTROOTCA.pem
+
+
+
+#openshift_metrics_install_metrics=true
+
+#openshift_logging_install_logging=true
+#openshift_logging_use_ops=false
+#openshift_logging_es_nodeselector={"node-role.kubernetes.io/infra":"true" }
+#openshift_logging_es_ops_nodeselector={"node-role.kubernetes.io/infra":"true" }
+#openshift_logging_es_pvc_dynamic=true
+#openshift_logging_es_memory_limit=4G
+
+
+# host group for masters
+[masters]
+labvsdt0001.ercot.com
+labvsdt0002.ercot.com
+labvsdt0003.ercot.com
+
+# host group for etcd
+[etcd]
+
+labvsdt0001.ercot.com
+labvsdt0002.ercot.com
+labvsdt0003.ercot.com
+
+
+# host group for nodes, includes region info
+[nodes]
+labvsdt0001.ercot.com openshift_node_group_name='node-config-master-infra'
+labvsdt0002.ercot.com openshift_node_group_name='node-config-master-infra'
+labvsdt0003.ercot.com openshift_node_group_name='node-config-master-infra'
+labvsdt0004.ercot.com openshift_node_group_name='node-config-compute'
+labvsdt0005.ercot.com openshift_node_group_name='node-config-compute'
+labvsdt0006.ercot.com openshift_node_group_name='node-config-compute'
+

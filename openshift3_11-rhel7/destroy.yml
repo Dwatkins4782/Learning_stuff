@@ -1,0 +1,69 @@
+- name: Deploy CoreOS Virtual Appliances
+  hosts: all
+  gather_facts: False
+
+  tasks:
+  - name: Remove VM by name
+    vmware_guest:
+      hostname: "{{ vmware_host }}"
+      username: "{{ admin_user }}"
+      password: "{{ admin_pw }}"
+      validate_certs: no
+      name: "{{ inventory_hostname }}"
+      state: absent
+      force: yes
+    delegate_to: localhost
+
+  - name: configure an ipv4 a record
+    nios_a_record:
+      name: "{{ inventory_hostname }}"
+      comment: Added by Openshift install
+      ipv4: "{{ ip }}"
+      state: present
+      provider:
+       host: "{{ nios_provider }}"
+       username: "{{ iblox_admin_user }}"
+       password: "{{ iblox_admin_pw }}"
+    delegate_to: localhost
+
+  - name: configure an ipv4 ptr record
+    nios_ptr_record:
+      ptrdname: "{{ inventory_hostname }}"
+      comment: Added by Openshift install
+      ipv4: "{{ ip }}"
+      state: present
+      provider:
+       host: "{{ nios_provider }}"
+       username: "{{ iblox_admin_user }}"
+       password: "{{ iblox_admin_pw }}"
+    delegate_to: localhost
+    ignore_errors: yes
+
+  - name: configure a dhcp static
+    nios_fixed_address:
+      name: "{{ inventory_hostname }}"
+      comment: Added by Openshift install
+      ipaddr: "{{ ip }}"
+      mac: "{{ mac }}"
+      network: "{{ network }}"
+      state: present
+      provider:
+       host: "{{ nios_provider }}"
+       username: "{{ iblox_admin_user }}"
+       password: "{{ iblox_admin_pw }}"
+    delegate_to: localhost
+    ignore_errors: yes
+
+  - name: Restart Infoblox Services
+    uri:
+      url: "https://{{ nios_provider }}/wapi/v2.5/grid/b25lLmNsdXN0ZXIkMA:{{ iblox_key }}?_function=restartservices"
+      user: "{{ iblox_admin_user }}"
+      password: "{{ iblox_admin_pw }}"
+      method: POST
+      body: '{"restart_option": "RESTART_IF_NEEDED"}'
+      body_format: json
+      headers:
+        Content-Type: "application/json"
+      validate_certs: false
+    delegate_to: localhost
+

@@ -1,0 +1,64 @@
+all:
+  children:
+    masters:
+      hosts:
+        labvsdt0001.lab.ercot.com:
+          cluster_name: master1
+          mac: ca:fe:f0:0d:76:8e
+          ip: 10.5.6.231
+        labvsdt0002.lab.ercot.com:
+          cluster_name: master1
+          mac: ca:fe:f0:0d:26:8e
+          ip: 10.5.6.232
+        labvsdt0003.lab.ercot.com:
+          cluster_name: master2
+          mac: ca:fe:f0:0d:5b:8e
+          ip: 10.5.6.233
+      vars: 
+        num_cpus: "8"
+        mem_mb: "16384"
+    workers:
+      hosts:
+        labvsdt0004.lab.ercot.com:
+          cluster_name: worker1
+          mac: ca:fe:f0:0d:b4:8e
+          ip: 10.5.6.234
+        labvsdt0005.lab.ercot.com:
+          cluster_name: worker2
+          mac: ca:fe:f0:0d:5e:8e
+          ip: 10.5.6.235
+        labvsdt0006.lab.ercot.com:
+          cluster_name: worker3
+          mac: ca:fe:f0:0d:0f:8e
+          ip: 10.5.6.236
+      vars:
+        num_cpus: "16"
+        mem_mb: "32768"
+  vars:
+    building: tcc1
+    facts_file: facts_file.j2
+    netmask: 255.255.255.0
+    gateway: 10.5.6.1
+    portgroup: lab-285
+    env_known_hosts: lab-known_hosts.j2
+    ansible_user: root
+    ansible_password: redhat
+    vmware_host: dvtvsvr0015.ercot.com
+    vm_template: tpl-rhel7-openshift
+    vmware_folder: /rhel-oshift311
+    tmp_pub_key_loc: /tmp/labvsdt0001.lab.ercot.com/root/.ssh/id_rsa.pub
+    admin_user: scorchprod
+    admin_pw: 'DamnYouP0meroy!'
+    root_user: root
+    root_pw: 'redhat'
+    iblox_admin_user: admin
+    iblox_admin_pw: infoblox 
+    datacenter: Lab
+    datastore: ds04
+    cluster: Lab-Cluster    
+    openshift_inv_file: lab-openshift-inv.yml
+    disk_size_gb: "120"
+    nios_provider: infoblox1.lab.ercot.com
+    network: 10.5.6.0/24
+    iblox_key: 'lab%20infoblox'
+    sshkey_hash: "I2Nsb3VkLWNvbmZpZwpzc2hfYXV0aG9yaXplZF9rZXlzOgogIC0gInNzaC1yc2EgQUFBQUIzTnphQzF5YzJFQUFBQURBUUFCQUFBQkFRQzVScHNKay9LMlFZaFNCdkwvWVlRZVFPUzQ2eEY0ZGllZFZwUEluNS9LS2psTHhWVUNyb2hpY0EyN055RkVaSFRuVUUzWDRzdFVzRHdGRWFNcTNsLzBhZE5OYlV0bXBZVWY1MU5xVXFvSXlYVDA4K0gxN0paUHo0S2JDS3RSUklPTHV6a1JzQ2RDdTZkdGpZeFB4ZlEweTl4SEk2ZUdLQVRoa0dnbWFEaldSSjVqSWFNT0w4Yy9ramVFcCtwandrQjFpL3N4ZldYYitINFkvVjZiNm1EUVFwVGtmUm1ybGRkSUxodFRUSk9HK3hhY1B2NHhzMk1yTTF0eEFxOXBIRThvaTdWaGUrUGUzQUFXUmhJcHJQclVOa1NDUHdCTWJ2dXNmcUVIL0UxNUNXZW5SeGo5UmhDeHVsRk10dmJSUWgxQ0c0ZS9HbEFPV0NOQlpCT1hUSmpaIgo="
