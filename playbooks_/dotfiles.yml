@@ -1,0 +1,41 @@
+---
+- name: Blast dotfiles over to linux nodes.
+  hosts: local
+  sudo: no
+  gather_facts: no 
+  vars:
+    user: ccopeland
+    repo_path: /home/ccopeland/ccopeland-git/dotfiles/
+    nonrepo_path: /home/ccopeland/dotfiles/
+  tasks:
+    - name: Stat for dotfiles git repo.
+      stat: path={{ repo_path }} 
+      register: df_path
+
+    - name: If no repo, copy dotfiles to target.
+      copy: src={{ repo_path }} dest={{ nonrepo_path }} mode=0700
+      when: df_path.stat.isdir == False
+
+    - name: If repo, register file list.
+      command: ls {{ repo_path }}
+      register: dotfiles_repo
+      when: df_path.stat.isdir == True
+
+    - name: If no repo, register file list.
+      command: ls -A1 {{ nonrepo_path }}
+      register: dotfiles
+      when: df_path.stat.isdir == False
+
+    - name: If repo, create symlinks. 
+      file: src="{{ repo_path }}/{{ item }}"
+            dest="/home/{{ user }}/{{ item }}"
+            state=link
+      when: df_path.stat.isdir == True
+      with_items: dotfiles_repo.stdout_lines 
+
+    - name: If no repo, create symlinks.
+      file: src="{{ nonrepo_path }}/{{ item }}"
+            dest="/home/{{ user }}/{{ item }}"
+            state=link
+      when: df_path.stat.isdir == False
+      with_items: dotfiles.stdout_lines

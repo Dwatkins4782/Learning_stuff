@@ -1,0 +1,29 @@
+---
+# disable-huge-pages
+
+#This playbook disables transparent huge pages for RHEL 7 machines. It was 
+#requested for BIA's Splunk stack and should be included in any automation for
+#them should it be established.
+
+- name: Disable transparent huge pages on RHEL 7.
+  hosts: all
+  become: yes
+  gather_facts: no
+
+  tasks:
+    - name: Modify grub config file template on the server
+      lineinfile:
+        path: /etc/default/grub
+        #regexp: '^(GRUB_CMDLINE_LINUX.*)'
+        regexp: '^(GRUB_CMDLINE_LINUX(?!.*\btransparent_hugepage=never\b).*)"$'
+        line: '\1 transparent_hugepage=never"'
+        backrefs: yes
+
+    # This would require more complexity if we wish to include RHEL 8.
+    # grub2-mkconfig -o /boot/efi/EFI/redhat/grub.cfg
+    - name: Run grub2-mkconfig to build config file
+      command:
+        cmd: /sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
+
+    - debug:
+        msg: "This change will not take effect until the machine is rebooted."

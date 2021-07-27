@@ -1,0 +1,30 @@
+---
+- hosts: uid_gid 
+  user: ansible
+  #sudo: yes
+  become: true
+  vars:
+    NEWUID: 1062797437
+    NEWGID: 1062732289
+    OLDUID: 1010
+    OLDGID: 1010
+    LOGIN: apex 
+    GROUP: apex
+
+  tasks:
+  - name: Modify user uid
+    shell: /usr/sbin/usermod -o -u {{ NEWUID }} {{ LOGIN }}
+
+  - name: Modify group gid
+    shell: /usr/sbin/groupmod -o -g {{ NEWGID }} {{ GROUP }}
+    
+  - name: Find and update user UID
+    shell: /usr/bin/find / -user {{ NEWUID }} -exec /bin/chown -h {{ NEWUID }}:{{ NEWGID }} {} \;
+    ignore_errors: yes
+
+#  - name: Find and update group GID
+#    shell: /usr/bin/find / -group {{ OLDGID }} -exec /bin/chgrp -h {{ NEWGID }} {} \;
+#    ignore_errors: yes
+
+  - name: Update login group
+    shell: /usr/sbin/usermod -g {{ NEWGID }} {{ LOGIN }}

@@ -1,0 +1,27 @@
+---
+- name: Satelllite 6 Debut
+  hosts: inf5-dev
+  sudo: yes
+  gather_facts: no
+  
+  tasks:
+  - name: Remove capsule cert rpm.
+    command: "rpm -e katello-ca-consumer-prtlsvr0012.ercot.com-1.0-1.noarch"
+
+  - name: Install Satellite cert rpm.
+    command: "rpm -Uvh http://prtlsvr0011.ercot.com/pub/katello-ca-consumer-latest.noarch.rpm"
+
+  - name: Nuke subscription-manager metadata.
+    command: "subscription-manager clean"
+    tags:
+      - subman
+
+  - name: Nuke yum metadata.
+    command: "yum clean all"
+
+  - name: Apply all available updates.
+    yum:
+      name: '*'
+      state: latest
+    tags:
+      - yum

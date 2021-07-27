@@ -1,0 +1,23 @@
+---
+- name: CoreSite2 Failover Operations
+  hosts: cor2
+  user: ansible
+  sudo: yes
+  gather_facts: no
+  vars:
+    FS1: /apps/tibcodata/mid/ICE/PROD
+  tasks:
+  - name: Nuke any processes left behind
+    command: /sbin/fuser -ck {{ FS1 }}
+    tags:
+      - nuke
+    
+  - name: Unmount target file system
+    command: /bin/umount {{ FS1 }}
+    tags:
+      - umount
+
+  - name: Mount target file system
+    command: /bin/mount -a 
+    tags:
+      - mount

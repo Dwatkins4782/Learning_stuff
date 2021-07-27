@@ -1,0 +1,19 @@
+---
+- name: Disable IPv6
+  hosts: 
+  user: ansible
+  sudo: yes
+  gather_facts: no
+  tasks:
+  - name: create ipv6.conf file
+    command: /bin/touch /etc/modprobe.d/ipv6.conf
+    args:
+      creates: /etc/modprobe.d/ipv6.conf
+    tags:
+      - rhel6
+
+  - name: add line to ipv6.conf if does not exists
+    lineinfile: dest=/etc/modprobe.d/ipv6.conf  line="install ipv6 /bin/true"
+
+  - name: disable systems acceptance of router advertisements and ICMP redirects
+    lineinfile: dest=/etc/sysconfig/network  line="IPV6_AUTOCONF=no"

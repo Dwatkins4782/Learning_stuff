@@ -1,0 +1,18 @@
+---
+- hosts: post_provision
+  user: ansible
+  become: yes
+  tasks:
+  - name: Remove puppet SSL directory.
+    file: "path=/etc/puppetlabs/puppet/ssl state=absent"
+
+  - name: Update puppet server string
+    lineinfile: 
+      dest: /etc/puppetlabs/puppet/puppet.conf 
+      regexp: '^server = .*'
+      line: 'server = puppet-taylor.ercot.com'
+      backup: yes
+    #shell: sed -i.bak 's/server = .*/server = puppet-taylor.ercot.com/' /etc/puppetlabs/puppet/puppet.conf
+
+  - name: Restart Puppet Daemon
+    service: name=puppet enabled=yes state=restarted

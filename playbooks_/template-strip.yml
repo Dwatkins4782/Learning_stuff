@@ -1,0 +1,56 @@
+---
+- name: Strip a VM down for conversion to VM template.
+  hosts: dvllab001
+  sudo: yes
+
+  tasks:
+    - name: Get a list of the ssh server keys.
+      shell: "ls -A1 /etc/ssh/ssh_host*"
+      register: ssh_server_keys
+      tags:
+        - ssh-keys
+
+    - name: Delete those server keys.
+      file: path="{{ item }}"
+            state=absent
+      with_items: ssh_server_keys.stdout_lines
+      tags:
+        - ssh-keys
+
+    - name: Remove proxy from yum.conf
+      lineinfile: dest=/etc/yum.conf
+                  state=absent
+                  line='proxy=http://nwt571.ercot.com:8080'
+      tags:
+        - satellite
+
+    - name: Blank out IP address.
+      lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-eth0
+                  regexp='^IPADDR='
+                  line='IPADDR=""'
+      tags:
+        - network
+
+    - name: Blank out netmask
+      lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-eth0
+                  regexp='^NETMASK='
+                  line='NETMASK=""'
+      tags:
+        - network
+
+    - name: Blank out gateway.
+      lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-eth0
+                  regexp='^GATEWAY='
+                  line='GATEWAY=""'
+      tags:
+        - network
+
+    - name: Remove that DNS line.
+      lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-eth0
+                  regexp='^DNS1='
+                  state=absent
+      tags:
+        - network
+
+    - name: Change the hostname to template name.
+      hostname: name=rhel71-template

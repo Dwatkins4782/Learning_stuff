@@ -1,0 +1,8 @@
+---
+- name: Set some splunk facts
+  hosts: ops_splunk
+  become: yes
+  tasks:
+    - name: Set ops_splunk to true
+      set_fact:
+        ops_splunk: true

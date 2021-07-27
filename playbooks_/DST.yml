@@ -1,0 +1,29 @@
+---
+- name: DST Set
+  hosts: dst
+  become: yes
+  gather_facts: no
+  vars:
+    Day: "08"
+    Month: 03
+    Year: 2018
+    Hour: "22"
+  tasks:
+  - name: Stop NTP Daemon
+    service: name=ntpd state=stopped enabled=no
+    tags:
+      - ntp
+
+  - name: Stop Puppet Daemon
+    service: name=puppet state=stopped enabled=no
+    tags:
+      - puppet
+  
+  - name: Grab minutes
+    shell: date +%M
+    register: M
+  
+  - name: Set Date Time
+    #shell: /bin/date "{{ Month }}{{ Day }}{{ Hour }}{{ M.stdout }}{{ Year }}"
+    # alternative option below
+    shell: /bin/date 030803`date +"%M"`2019.`date +"%S"`

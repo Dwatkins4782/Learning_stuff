@@ -1,0 +1,14 @@
+---
+- hosts: move
+  user: ansible
+  sudo: yes
+  gather_facts: no
+  vars:
+    username: weblogic 
+
+  tasks:
+  - name: Remove home directory.
+    file: "path=/home/{{ username }} state=absent"
+
+  - name: Remove sudo artifacts.
+    file: "path=/var/run/sudo/{{ username }} state=absent"

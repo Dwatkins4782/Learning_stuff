@@ -1,0 +1,15 @@
+---
+- hosts: goferd-test
+  become: yes
+  gather_facts: False
+  tasks:
+  - name: Stop and disable goferd.
+    service:
+      name: goferd
+      enabled: no
+      state: stopped
+
+  - name: Remove old mitigation cron job.
+    cron:
+      name: goferd-kick
+      state: absent

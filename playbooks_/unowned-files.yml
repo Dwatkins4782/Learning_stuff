@@ -1,0 +1,19 @@
+---
+- name: Find unowned files.
+  hosts: scan_fails
+  sudo: yes
+  gather_facts: False
+
+  tasks:
+    - name: Scan for unowned files.
+      command: "find / -path '/proc' -prune -o -path '/tmp' -prune -o -path '/root' -prune -o -path '/home' -prune -o -nouser -o -nogroup -print"
+      register: find
+      # This command never changes anything.
+      changed_when: False
+    - name: Delete unowned /var/run/sudo files.
+      file: name={{ item }} state=absent
+      when: find.stdout.find('/var/run/sudo') != -1 
+      with_items: "{{ find.stdout_lines }}"
+    - name: Change ownership of /var/log/sudo.log back to root.
+      file: name=/var/log/sudo.log owner=root group=root
+      when: find.stdout.find('/var/log/sudo') != -1

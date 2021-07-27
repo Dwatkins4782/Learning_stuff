@@ -1,0 +1,10 @@
+---
+- name: Clean up old Openview patches.
+  hosts: local
+  sudo: yes
+  tasks:
+    - action: file path=/var/opt/OV/installation/bundles/Operations-agent/{{ item }} state=absent
+      with_items:
+        - OALIN_00007
+        - OALIN_00012
+        - OALIN_00030

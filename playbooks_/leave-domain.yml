@@ -1,0 +1,15 @@
+---
+- hosts: temp 
+  user: ansible
+  become: true
+  check_mode: no
+  tasks:
+  - name: leave powerbroker domain
+    command: /usr/bin/domainjoin-cli leave
+    register: lve
+  - debug: var=lve.stdout_lines
+
+  - name: rejoin powerbroker domain
+    command: /usr/bin/domainjoin-cli join --nohosts --notimesync --ou 'servers/linux/lw6' ercot.com likewiseguy ''
+    register: rej
+  - debug: var=rej.stdout_lines

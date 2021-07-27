@@ -1,0 +1,26 @@
+---
+- name: Delete a host record...
+  hosts: localhost
+  gather_facts: no
+  tasks:
+  - name: Deleting host record(s)...
+    nios_a_record:
+      name: "{{ hostname }}"
+      ipv4: "{{ ip }}"
+      state: absent
+      provider:
+        host: infoblox.ercot.com
+        username: "{{ infoblox_user }}"
+        password: "{{ infoblox_pw }}"
+    connection: local
+
+  - name: Cleaning up PTR record(s)...
+    nios_ptr_record:
+      ipv4: "{{ ip }}"
+      ptrdname: "{{ hostname_fqdn }}"
+      state: absent
+      provider:
+        host: infoblox.ercot.com
+        username: "{{ infoblox_user }}"
+        password: "{{ infoblox_pw }}"
+    connection: local

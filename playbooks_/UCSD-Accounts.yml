@@ -1,0 +1,33 @@
+---
+- hosts: post_provision
+  user: ansible
+  sudo: yes
+  tasks:
+  - name: Create group ucsd_b1_stor
+    action: group name=ucsd_b1_stor gid=576
+
+  - name: Create ucsd_b1_stor user.
+    action: user name=ucsd_b1_stor uid=576 group=ucsd_b1_stor
+
+  - name: Remove password expiration.
+    command: /usr/bin/chage -M -1 ucsd_b1_stor
+
+
+  - name: Create group ucsd_t1_stor
+    action: group name=ucsd_t1_stor gid=577
+
+  - name: Create ucsd_t1_stor user.
+    action: user name=ucsd_t1_stor uid=577 group=ucsd_t1_stor
+
+  - name: Remove password expiration.
+    command: /usr/bin/chage -M -1 ucsd_t1_stor
+
+
+  - name: Create group ucsd_t3_stor
+    action: group name=ucsd_t3_stor gid=578
+
+  - name: Create ucsd_t3_stor user.
+    action: user name=ucsd_t3_stor uid=578 group=ucsd_t3_stor
+
+  - name: Remove password expiration.
+    command: /usr/bin/chage -M -1 ucsd_t3_stor

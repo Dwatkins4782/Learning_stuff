@@ -1,0 +1,37 @@
+---
+- hosts: hotfix-dev
+  gather_facts: true
+  become: true
+  # Serialize since restarting goferd will comm to Satellite; don't want overload.
+  #serial:
+  #  - 1
+
+  tasks:
+    - name: Force subscription-manager to talk to Satellite
+      command: "subscription-manager refresh"
+
+    - name: Install python qpid proton
+      yum:
+        name: "python-qpid-proton-0.9-21.el{{ ansible_distribution_major_version }}.{{ facter_os.architecture }}"
+        state: present
+      register: yum_one
+    
+    - name: Install qpid-proton-c
+      yum:
+        name: "qpid-proton-c-0.9-21.el{{ ansible_distribution_major_version }}.{{ facter_os.architecture }}"
+        state: present
+      register: yum_two
+
+    - name: Install qpid-proton-c-devel
+      yum:
+        name: "qpid-proton-c-devel-0.9-21.el{{ ansible_distribution_major_version }}.{{ facter_os.architecture }}"
+        state: present
+      register: yum_three
+
+    - name: Kick goferd.
+      service:
+        name: goferd
+        state: restarted
+      when: (yum_one|changed) or (yum_two|changed) or (yum_three|changed)
+      
+

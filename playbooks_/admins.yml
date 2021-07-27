@@ -1,0 +1,19 @@
+- hosts: "{{ servers }}"
+  gather_facts: yes
+  become: yes
+  vars:
+    ad_groupname: "%nexpose-admins" 
+
+  tasks:
+  - name: Copy over sudo file.
+    template:
+      src: ../sudo/admins.sudo
+      dest: /etc/sudoers.d/Admins
+      owner: root
+      group: root
+      mode: 0440
+      backup: yes
+
+  - name: Refresh Powerbroker cache.
+    command: /opt/likewise/bin/lw-ad-cache --delete-all
+      

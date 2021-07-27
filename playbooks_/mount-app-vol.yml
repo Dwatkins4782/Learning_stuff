@@ -1,0 +1,36 @@
+---
+- hosts: post_provision
+  gather_facts: yes
+  sudo: yes
+  remote_user: ansible
+  tasks:
+    - name: Create volume group.
+      lvg: vg=vg01 pvs=/dev/sdb state=present 
+
+    - name: Create logical volume.
+      lvol: vg=vg01 lv=app size=100%FREE
+
+    - name: (RH6) Make ext4 filesystem.
+      filesystem: fstype=ext4 dev=/dev/vg01/app
+      when: ansible_distribution_major_version == "6"
+
+    - name: (RH5) Make journaled ext3 filesystem.
+      filesystem: fstype=ext3 dev=/dev/vg01/app opts="-j"
+      when: ansible_distribution_major_version == "5"
+
+    - name: Create /app directory.
+      file: path=/app state=directory
+
+    - name: (RH6) Mount new filesystem.
+      mount: name=/app src=/dev/mapper/vg01-app fstype=ext4 state=mounted
+      when: ansible_distribution_major_version == "6"
+
+    - name: (RH5) Mount new filesystem.
+      mount: name=/app src=/dev/mapper/vg01-app fstype=ext3 state=mounted
+      when: ansible_distribution_major_version == "5"
+
+    - name: Turn off automatic fsck.
+      command: /sbin/tune2fs -c 0 /dev/vg01/app
+
+    - debug: "1.) Update Satellite system details."
+    - debug: "2.) Edit Active Directory entry."

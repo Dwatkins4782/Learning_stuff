@@ -1,0 +1,30 @@
+---
+- name: DST Reset
+  hosts: dst_reset
+  become: true
+  gather_facts: no
+  tasks:
+  - name: Set date with ntpdate.
+    command: /usr/sbin/ntpdate ntp.ercot.com
+    register: ntpdate_result
+
+  - name: Fail if ntpdate didn't sync.
+    fail:
+      msg: "ntpdate failed to sync"
+    when: ntpdate_result.rc != 0
+
+  - name: Restart NTP Daemon
+    service: name=ntpd state=restarted enabled=yes
+    tags:
+      - ntp
+    
+  - name: Restart Likewise Daemon
+    service: name=lwsmd state=restarted enabled=yes
+    tags:
+      - likewise
+
+  - name: Restart Puppet Daemon
+    service: name=puppet state=restarted enabled=yes
+    tags:
+      - puppet
+       

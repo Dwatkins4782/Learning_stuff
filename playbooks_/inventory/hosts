@@ -1,0 +1,19 @@
+# Eat local.
+[local]
+localhost    ansible_connection=local
+
+[lab]
+linuxlab01
+
+[arcsight]
+cpl0042
+
+[oracle_ldap]
+etl0003
+
+[admin]
+svlp016e
+svl0183
+
+[new_boxes]
+itl0173

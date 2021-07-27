@@ -1,0 +1,24 @@
+# USAGE: Manually input an 8-character string for the "salt" variable.
+# Everything else you will be prompted for.
+
+- name: Update a user's password.
+  hosts: localhost
+  become: yes
+  gather_facts: no
+  vars_prompt:
+    - name: userinput
+      prompt: "Username whose password to change"
+      private: no
+    - name: passinput
+      prompt: "New password"
+      private: yes
+  vars:
+    salt: ditQMuDv 
+
+  tasks:
+    - user:
+        name: "{{ userinput }}"
+        # By default this will generate 16-character salt so we set one above
+        password: "{{ passinput | password_hash('sha512', salt ) }}"
+        update_password: always
+

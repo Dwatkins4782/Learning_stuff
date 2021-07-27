@@ -1,0 +1,26 @@
+---
+- hosts: fireeye
+  user: ansible
+  become: yes
+  gather_facts: yes
+
+  tasks:
+  - name: Grab json config file from Satellite.
+    get_url:
+      url: https://satellite6.ercot.com/pub/agent_config.json
+      validate_certs: no
+      dest: /home/ansible/agent_config.json
+
+  - name: Install rpm.
+    yum:
+      name: https://satellite6.ercot.com/pub/xagt-27.30.0-1.el{{ ansible_distribution_major_version }}.x86_64.rpm
+      validate_certs: no
+      state: present
+
+  - name: Import the agent configuration file.
+    command: /opt/fireeye/bin/xagt -i /home/ansible/agent_config.json
+
+  - name: Ensure agent is started.
+    service:
+      name: xagt
+      state: started

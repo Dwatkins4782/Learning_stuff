@@ -1,0 +1,11 @@
+---
+
+- name: Patch pre-check
+  hosts: local
+  gather_facts: yes
+
+  tasks:
+    - name: Disks Over 85 Pct Full
+      debug: msg="{{ ansible_hostname }}:{{ point.mount }}"
+      #debug: msg="{% for point in ansible_mounts %}Mount':' {{ point.mount }} Available':' {{ point.size_available }} {% endfor %}"
+      when: "'{% for point in ansible_mounts %}{% if point.size_available > (point.size_total / 100 * 5) %}true{% endif %}{% endfor %}' == 'true'"

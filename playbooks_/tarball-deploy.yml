@@ -1,0 +1,29 @@
+---
+- hosts: tarball_deploy
+  become: yes
+  gather_facts: no
+  vars:
+    # Source (URL) of the tarball to deploy.
+    # Nexus location for Oracle software: https://nexus.ercot.com/nexus/content/groups/internal/com/oracle/
+    src: http://puppetweb.ercot.com/cognos/jre-8u221-linux-x64.tar.gz
+    # Full path where the tarball should be extracted. Dir must exist.
+    dest: /app/cognos/java/
+    # Owner of the exploded files.
+    owner: cognos
+    # Group of the exploded files.
+    group: cognos
+    # Any additional options you want to send to gtar/unzip.
+    opts: 
+      - --sort=none
+      - --sort=none
+
+  tasks:
+    - name: Download and extract tarball.
+      unarchive:
+        src: "{{ src }}"
+        dest: "{{ dest }}"
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+        remote_src: yes
+        extra_opts:
+          - "{{ opts }}"

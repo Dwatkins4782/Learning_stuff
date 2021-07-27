@@ -1,0 +1,10 @@
+- hosts: "{{ hosts }}"
+  become: yes
+  gather_facts: no
+  tasks:
+  - cron:
+      name: "goferd-kick"
+      minute: "0"
+      hour: "6,18"
+      #user: root
+      job: "sudo /sbin/service goferd restart"

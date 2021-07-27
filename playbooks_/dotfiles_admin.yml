@@ -1,0 +1,53 @@
+---
+- name: Set up dotfiles on an admin server.
+  hosts: local
+  sudo: no
+  gather_facts: no
+  remote_user: ccopeland
+  vars:
+    user: ccopeland
+    repo_path: /home/ccopeland/ccopeland-git/dotfiles
+    softlink_path: /home/ccopeland/dotfiles
+
+  tasks:
+    - name: Ensure repo is present and up-to-date.
+      git: repo=ssh://git@stash.ercot.com:7999/sea/ccopeland-git.git
+           dest=/home/ccopeland/ccopeland-git
+           ssh_opts="-o IdentityFile=yes"
+           key_file=/home/ccopeland/.ssh/ccopeland_dev
+           accept_hostkey=yes
+           update=yes
+           force=no
+
+    - name: Ensure softlink to repo is present.
+      file: 
+        src: "{{ repo_path }}"
+        dest: "{{ softlink_path }}"
+        state: link
+
+    - name: Create list of repo dotfiles.
+      command: "ls {{ repo_path }}"
+      register: new_dotfiles
+
+    - name: See if in-place dotfiles are links.
+      shell: "ls -F /home/ccopeland/{{ item }}"
+      register: old_dotfiles
+      failed_when: false
+      always_run: yes
+      changed_when: false
+      with_items: new_dotfiles.stdout_lines
+
+    - name: Remove old dotfiles item if linking a new one.
+      file:
+        path: "/home/ccopeland/{{ new_dotfiles[item.0] }}"
+        state: absent
+      when: "'@' not in item.1.stdout"
+      with_indexed_items: old_dotfiles.results
+
+    - name: Link dotfiles into home folder.
+      file:
+        src: "{{ repo_path }}/{{ item }}"
+        dest: "/home/ccopeland/{{ item }}"
+        state: link
+      sudo: no
+      with_items: new_dotfiles.stdout_lines

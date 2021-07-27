@@ -1,0 +1,30 @@
+---
+- hosts: inf3
+  become: true
+  gather_facts: false
+  tasks:
+   # - name: Refresh subscription manager.
+    #  command: /usr/sbin/subscription-manager refresh
+    
+    - name: Ensure goferd is knocked unconscious.
+      service:
+        name: goferd
+        state: stopped
+        enabled: no
+      
+    - name: Apply OS updates.
+      yum:
+        name: '*'
+        state: latest
+
+    #- name: Trigger reboot
+    #  shell: nohup bash -c "sleep 5s && /sbin/shutdown -r now" &
+    #  async: 1
+    #  poll: 0
+    #  when: exception is not defined
+
+    #- name: Wait for system to finish boot.
+    #  wait_for_connection:
+    #    delay: 90
+    #    timeout: 600
+    #  when: exception is not defined

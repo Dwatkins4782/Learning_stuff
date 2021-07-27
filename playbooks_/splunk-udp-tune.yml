@@ -1,0 +1,13 @@
+- hosts: splunk-tune
+  become: yes
+  gather_facts: no
+  vars:
+    default_val: 67108864
+    max_val: 67108864
+  tasks:
+    - name: Install iperf3
+      yum: name=iperf3 state=present
+    - name: Update net.core.rmem_default
+      sysctl: name=net.core.rmem_default value={{ default_val }} reload=no
+    - name: Update net.core.rmem_max
+      sysctl: name=net.core.rmem_max value={{ max_val }}
