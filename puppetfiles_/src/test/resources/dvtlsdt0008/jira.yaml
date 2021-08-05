@@ -1,0 +1,23 @@
+---
+backup_schedule: lower environments - (by request) weekly full/daily inc/retained 90 days
+dnts_flag: no
+super_environment: dev
+functional_environment: dev
+monitoring_required: dev - 24x7 major - no helpdesk callout-no perf mon
+nerc_flag: no
+nerc_classification: none
+soc1_flag: no
+business_application: wbc - mis sandbox
+inf_owner: 310 system engineering & administration (mgr)
+building: tcc1
+business_service: web communications
+business_owner: 347 common platforms (mgr)
+business_owner_dl: 1ercotenterpriseintegration@ercot.com
+it_ops_owner: 347 common platforms (mgr)
+it_ops_owner_dl: 1ercotenterpriseintegration@ercot.com
+test_owner: 347 common platforms (mgr)
+test_owner_dl: 1ercotenterpriseintegration@ercot.com
+dev_owner: 347 common platforms (mgr)
+dev_owner_dl: 1ercotenterpriseintegration@ercot.com
+db_owner: unknown
+db_owner_dl: unknown

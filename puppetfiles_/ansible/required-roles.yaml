@@ -1,0 +1,12 @@
+- src:     https://stash.ercot.com/scm/an/role-ercot-yum.git
+  scm:     git
+  version: develop
+  name:    ercot.yum
+- src:     https://stash.ercot.com/scm/an/role-ercot-certs.git
+  scm:     git
+  version: develop
+  name:    ercot.certs
+- src:     https://stash.ercot.com/scm/an/role-ercot-nginx.git
+  scm:     git
+  version: develop
+  name:    ercot.nginx

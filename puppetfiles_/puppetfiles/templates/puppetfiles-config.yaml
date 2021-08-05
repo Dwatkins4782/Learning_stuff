@@ -1,0 +1,15 @@
+## CONFIG-MAP ##
+{{- include "config.version" . }}
+kind: "ConfigMap"
+metadata:
+  name: "{{ .Release.Name }}-{{ .Values.puppetfiles.component }}-configuration"
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "puppetfiles.labels.puppetfiles" . | indent 4 }}
+  annotations:
+    {{- include "puppetfiles.tracking.annotation" . | indent 4 }}
+data:
+  application.properties: |
+    management.endpoints.web.exposure.include=*
+    management.endpoint.health.show-details=always
+    management.endpoint.health.probes.enabled=true

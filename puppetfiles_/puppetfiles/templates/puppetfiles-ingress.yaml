@@ -1,0 +1,29 @@
+{{- if .Values.ingress.enabled }}
+## INGRESS ##
+{{- include "ingress.version" . }}
+kind: "Ingress"
+metadata:
+  name: "{{ .Release.Name }}-{{ .Values.application.name }}"
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    {{- include "puppetfiles.labels" . | indent 4 }}
+  annotations:
+    {{- include "puppetfiles.tracking.annotation" . | indent 4 }}
+    {{- include "puppetfiles.ingress.annotation" . | indent 4 }}
+spec:
+  tls:
+  - hosts:
+    - "{{ .Values.ingress.host }}.{{ required "A valid domain is required" .Values.ingress.domain }}"
+    secretName: "{{ .Release.Name }}-{{ .Values.puppetfiles.component }}-tls-certificate"
+  rules:
+  - host: "{{ .Values.ingress.host }}.{{ required "A valid domain is required." .Values.ingress.domain }}"
+    http:
+      paths:
+      - path: "/"
+        pathType: "Prefix"
+        backend:
+          service:
+            name: "{{ .Release.Name }}-{{ .Values.puppetfiles.svcComponent }}"
+            port:
+              number: {{ .Values.puppetfiles.port }}
+{{- end }}

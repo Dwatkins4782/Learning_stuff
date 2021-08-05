@@ -1,0 +1,27 @@
+apiVersion: "v1"
+kind: "Pod"
+metadata:
+  annotations:
+    ercot.com/product: "jenkins"
+    ercot.com/jenkins-agent: "java/container"
+spec:
+  containers:
+  - name: "jnlp"
+    image: "docker.repo.ercot.com/ercot/jenkins/agent/inbound:latest"
+    imagePullPolicy: "Always"
+    tty: true
+    resources:
+      limits:
+        memory: 1000Mi
+        cpu: 1000m
+  - name: "java"
+    image: "docker.repo.ercot.com/ercot/jenkins/agent/java/jdk/16:latest"
+    imagePullPolicy: "Always"
+    tty: true
+    securityContext:
+      runAsUser: "1000"
+      runAsGroup: "1000"
+    resources:
+      limits:
+        memory: 2000Mi
+        cpu: 2000m

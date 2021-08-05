@@ -1,0 +1,65 @@
+pipeline {
+    agent {
+        kubernetes {yamlFile 'build-environment.yaml'}
+    }
+
+    environment {
+        IMAGE_NAME = 'docker.repo.ercot.com/ercot/puppetfiles/api'
+        VERSION_NUMBER = "1.0.${env.BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Dependency Report') {
+            steps {
+                container('java') {
+                    sh 'mvn --batch-mode --show-version --fail-at-end versions:display-property-updates --no-snapshot-updates'
+                }
+            }
+        }
+
+        stage('Increment Version') {
+            steps {
+                container('java') {
+                    sh 'mvn --batch-mode --show-version --fail-at-end versions:set -DgenerateBackupPoms=false -DnewVersion=${VERSION_NUMBER}'
+                }
+            }
+        }
+
+        stage('Product Build') {
+            environment {
+                ARTIFACT_REPOSITORY_CREDS = credentials('JENKINS_SERVICE_ACCOUNT')
+                USERNAME = "${ARTIFACT_REPOSITORY_CREDS_USR}"
+                PASSWORD = "${ARTIFACT_REPOSITORY_CREDS_PSW}"
+            }
+
+            steps {
+                container('java') {
+                    sh 'mvn --batch-mode --show-version --fail-at-end -DskipTests -DaltDeploymentRepository=ercot-artifactory::https://repo.ercot.com/artifactory/maven -DREPO_URL=https://repo.ercot.com/artifactory/helm -DUSERNAME=${ARTIFACT_REPOSITORY_CREDS_USR} -DPASSWORD=${ARTIFACT_REPOSITORY_CREDS_PSW} -Dimage.tag=${GIT_COMMIT} deploy'
+                }
+            }
+        }
+
+        stage('Static/Test Analysis') {
+            steps {
+                jacoco exclusionPattern: '**/generated/**/*'
+                recordIssues enabledForFailure: true, tools: [mavenConsole(), java(), javaDoc(), hadoLint(pattern: 'hadolint-results.json'), junitParser(pattern: '**/target/surefire-reports/TEST-*.xml'), checkStyle(pattern: '**/target/checkstyle-result.xml'), spotBugs(useRankAsPriority: true, pattern: '**/target/spotbugsXml.xml'), cpd(pattern: '**/target/cpd.xml'), pmdParser(pattern: '**/target/pmd.xml')]
+            }
+        }
+
+        stage('Archive') {
+            steps {
+                archiveArtifacts artifacts: '**/*.rpm,**/target/puppetfiles*.jar,**/target/helm/repo/puppetfiles*.tgz'
+            }
+        }
+    }
+
+    post {
+        always {
+            emailext (
+                subject: "Jenkins Job Notification'${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                body: "Check console output at ${env.BUILD_URL}",
+                recipientProviders: [developers(), requestor(), culprits()]
+            )
+        }
+    }
+}

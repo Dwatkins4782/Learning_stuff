@@ -1,0 +1,23 @@
+puppetfiles:
+  config:
+    repoUrl: "https://stash.ercot.com/scm/pup/jira_yaml_file.git"
+    username: "puppetfiles"
+    password: "!V^OfvM@*Ke%"
+  secure:
+    endpoints: "/puppetfiles/v1/create/**,/puppetfiles/v1/update/**,/puppetfiles/v1/delete/**"
+  ldap:
+    userBase: "OU=ERCOT USERS"
+    filter: "sAMAccountName={0}"
+    url: "ldaps://ercot.com:636"
+    rootDn: "dc=ercot,dc=com"
+    managerDn: "cn=jenkins,ou=ercot service accounts,ou=ercot users,dc=ercot,dc=com"
+    managerPw: "ID&8UwOpLt4@"
+  reqMinMem: 756Mi
+  reqMaxMem: 756Mi
+  minAvailable: 1
+  repository: docker.dev.edge.repo.ercot.com/ercot/puppetfiles
+  version: "3f4a6b0de60cefd0110086e4b31e2983426147c4"
+route:
+  enabled: true
+  host: "puppetfiles"
+  domain: "apps.devk8s.ercot.com"

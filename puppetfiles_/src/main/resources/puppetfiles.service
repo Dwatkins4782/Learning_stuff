@@ -1,0 +1,18 @@
+[Unit]
+Description=ERCOT Puppetfles REST API
+Documentation=https://stash.ercot.com/users/bjohnson/repos/puppetfiles/browse
+
+[Service]
+Type=simple
+User=puppetfiles
+EnvironmentFile=/etc/opt/ercot/puppetfiles/configuration/puppetfiles-environment.conf
+ExecStart=/usr/bin/java $JAVA_OPTS -jar /opt/ercot/puppetfiles/api.jar
+ExecStop=/bin/kill -SIGTERM $MAINPID
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=control-group
+Restart=on-failure
+RestartSec=60s
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target

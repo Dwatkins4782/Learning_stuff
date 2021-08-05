@@ -1,0 +1,1 @@
+ldap_usr_filt: (&(loginShell=*)(|(memberOf=CN=SDTSandbox_LinuxLogon_DV,OU=Infrastructure,OU=CorpGroups,DC=ercot,DC=com)(memberOf=CN=All_LinuxLogon_All,OU=Infrastructure,OU=CorpGroups,DC=ercot,DC=com)(memberOf=CN=All_LinuxLogon_DV,OU=Infrastructure,OU=CorpGroups,DC=ercot,DC=com)(memberOf=CN=Linux_SVC_Accounts,OU=UNIX Groups,OU=Security Groups,DC=ercot,DC=com)))

@@ -1,0 +1,173 @@
+application:
+# OPTIONAL
+# The name field is the name of the application itself. Defaults to "puppetfiles".
+  name: "puppetfiles"
+
+# OPTIONAL
+# The scm field is the SCM URL where the application is stored.
+  scm: "git@git.ercot.com:7999/~bjohnson/puppetfiles.git"
+
+# Optional
+# The imagePullPolicy field ensures that the images in this chart are pulled when needed for a deployment.
+  imagePullPolicy: IfNotPresent
+
+puppetfiles:
+# OPTIONAL
+# The component field specifies the component name for pieces of the puppetfiles
+# service deployment. Defaults to puppetfiles
+  component: puppetfiles
+
+# OPTIONAL
+# The svcComponent field specifies the component name for pieces of the puppetfiles
+# service. Defaults to puppetfiles-service
+  svcComponent: puppetfiles-service
+
+# OPTIONAL
+# The repository field specifies the repository path the puppetfiles image should
+# be pulled from. Defaults to docker.repo.ercot.com/ercot/puppetfiles
+  repository: docker.repo.ercot.com/ercot/puppetfiles
+
+# OPTIONAL
+# The container field specifies the container the puppetfiles svc should
+# run. Defaults to api
+  container: api
+
+# OPTIONAL
+# The version field specifies the tag that should be pulled for the
+# app server container. Defaults to the latest version.
+  version: latest
+
+# OPTIONAL
+# The reqMinCpu field specifies the requested CPU for the application
+# server containers. Defaults to 500m.
+  reqMinCpu: 500m
+
+# OPTIONAL
+# The reqMaxCpu field specifies the CPU limit for the application
+# server containers. Defaults to 500m.
+  reqMaxCpu: 500m
+
+# OPTIONAL
+# The reqMinMem field specifies the requested RAM for the application
+# server containers. Defaults to 512Mi.
+  reqMinMem: 512Mi
+
+# OPTIONAL
+# The reqMaxMem field specifies the RAM limit for the application
+# server containers. Defaults to 512Mi.
+  reqMaxMem: 512Mi
+    
+# OPTIONAL
+# The xms field specifies the minimum heap size for the application
+# Defaults to 512M.
+  xms: 512M
+  
+# OPTIONAL
+# The xmx field specifies the maximum heap size for the application
+# Defaults to 512M.
+  xmx: 512M
+
+# OPTIONAL
+# The minAvailable field specifies the minimum number of replicas that
+# must be ready at any given time. Defaults to 1.
+  minAvailable: 2
+  
+# OPTIONAL
+# The minReplicas field specifies the minimum number of replicas the
+# autoscaler should permit to exist in the deployment. Defaults to 1.
+  minReplicas: 2
+
+# OPTIONAL
+# The maxReplicas field specifies the maximum number of replicas the
+# autoscaler should permit to exist in the deployment. Defaults to 3.
+  maxReplicas: 3
+
+# OPTIONAL
+# The cpuLoadAverage field specifies the target load for each application
+# server container. When the load exceeds this number the autoscaler will
+# spawn additional containers to spread the excessive load. Defaults to 70.
+  cpuLoadAverage: 70
+
+# OPTIONAL
+# The port field specifies the port endpoint listens on.
+# Defaults to 8080
+  port: 8080
+
+  readiness:
+  # OPTIONAL
+  # The path field specifies the endpoint Kubernetes should use to determine
+  # application readiness.
+    path: /actuator/health/readiness
+
+  # OPTIONAL
+  # The initialDelay field specifies the amount of time Kubernetes should wait
+  # before its initial readiness check.
+    initialDelay: 60
+  # OPTIONAL
+  # The period field specifies the amount of time Kubernetes should wait
+  # between readiness checks.
+    period: 10
+
+  # OPTIONAL
+  # The timeout field specifies the amount of time Kubernetes should wait
+  # before giving up on a readiness check.
+    timeout: 5
+
+  liveness:
+  # OPTIONAL
+  # The path field specifies the endpoint Kubernetes should use to determine
+  # application liveness.
+    path: /actuator/health/liveness
+
+  # OPTIONAL
+  # The initialDelay field specifies the amount of time Kubernetes should wait
+  # before its initial liveness check.
+    initialDelay: 30
+
+  # OPTIONAL
+  # The period field specifies the amount of time Kubernetes should wait
+  # between liveness checks.
+    period: 20
+
+  # OPTIONAL
+  # The timeout field specifies the amount of time Kubernetes should wait
+  # before giving up on a liveness check.
+    timeout: 10
+
+
+metrics:
+# OPTIONAL
+# The port field specifies the port that the prometheus metrics endpoint should
+# listen on. Defaults to 8080
+  port: 8080
+
+# OPTIONAL
+# The path field specifies the path where the prometheus metrics endpoint can be found.
+# Defaults to "/actuator/prometheus"
+  path: /actuator/prometheus
+
+ingress:
+# REQUIRED
+# The enabled field specifies whether an ingress resource should be created.
+  enabled: false
+  
+# REQUIRED
+# The host field specifies the host name the ingress resource will map itself to.
+  host:
+
+# REQUIRED
+# The domain field specifies the domain name the ingress will be bound to.
+  domain:
+  
+route:
+# REQUIRED
+# The enabled field specifies whether an ingress resource should be created.
+  enabled: false
+  
+# REQUIRED
+# The host field specifies the host name the ingress resource will map itself to.
+  host:
+
+# REQUIRED
+# The domain field specifies the domain name the ingress will be bound to.
+  domain:

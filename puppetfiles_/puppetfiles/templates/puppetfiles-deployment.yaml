@@ -1,0 +1,78 @@
+## DEPLOYMENT ##
+{{- include "deployment.version" . }}
+kind: "Deployment"
+metadata:
+  name: "{{ .Release.Name }}-{{ .Values.puppetfiles.component }}-deployment"
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "puppetfiles.labels.puppetfiles" . | indent 4 }}
+  annotations:
+    {{- include "puppetfiles.tracking.annotation" . | indent 4 }}
+    checksum/config: {{ include (print $.Template.BasePath "/puppetfiles-config.yaml") . | sha256sum }}
+    checksum/secret: {{ include (print $.Template.BasePath "/puppetfiles-secret.yaml") . | sha256sum }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "puppetfiles.selector.puppetfiles" . | indent 6 }}
+  replicas: {{ .Values.puppetfiles.minReplicas }}
+  template:
+    metadata:
+      labels:
+        {{- include "puppetfiles.labels.puppetfiles" . | indent 8 }}
+      annotations:
+        {{- include "puppetfiles.tracking.annotation" . | indent 8 }}
+        {{- include "puppetfiles.metrics.annotation" . | indent 8 }}
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                {{- include "puppetfiles.selector.puppetfiles" . | indent 16 }}
+            topologyKey: "kubernetes.io/hostname"
+      automountServiceAccountToken: false
+      volumes:
+      - name: "configuration"
+        configMap:
+          name: "{{ .Release.Name }}-{{ .Values.puppetfiles.component }}-configuration"
+      - name: "secrets"
+        secret:
+          secretName: "{{ .Release.Name }}-{{ .Values.puppetfiles.component }}-secret"
+      containers:
+      - name: "{{ .Release.Name }}-{{ .Values.puppetfiles.component }}"
+        image: "{{ .Values.puppetfiles.repository }}/{{ .Values.puppetfiles.container }}:{{ .Values.puppetfiles.version }}"
+        imagePullPolicy: {{ .Values.application.imagePullPolicy | quote }}
+        ports:
+        - containerPort: {{ .Values.puppetfiles.port }}
+          name: "ppt-port"
+        - containerPort: {{ .Values.metrics.port }}
+          name: "metrics-port"
+        env:
+        - name: "JAVA_TOOL_OPTIONS"
+          value: "-Xmx{{ required "Java XMX value must be set." .Values.puppetfiles.xmx }} -Xms{{ required "Java XMS value must be set." .Values.puppetfiles.xms }}"
+        resources:
+          requests:
+            cpu: {{ .Values.puppetfiles.reqMinCpu | quote }}
+            memory: {{ .Values.puppetfiles.reqMinMem | quote }}
+          limits:
+            cpu: {{ .Values.puppetfiles.reqMaxCpu | quote }}
+            memory: {{ .Values.puppetfiles.reqMaxMem | quote }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.puppetfiles.readiness.path }}
+            port: {{ .Values.puppetfiles.port }}
+          initialDelaySeconds: {{ .Values.puppetfiles.readiness.initialDelay }}
+          periodSeconds: {{ .Values.puppetfiles.readiness.period }}
+          timeoutSeconds: {{ .Values.puppetfiles.readiness.timeout }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.puppetfiles.readiness.path }}
+            port: {{ .Values.puppetfiles.port }}
+          initialDelaySeconds: {{ .Values.puppetfiles.liveness.initialDelay }}
+          periodSeconds: {{ .Values.puppetfiles.liveness.period }}
+          timeoutSeconds: {{ .Values.puppetfiles.liveness.timeout }}
+        volumeMounts:
+        - name: "secrets"
+          mountPath: "/etc/opt/ercot/puppetfiles/secrets"
+        - name: "configuration"
+          mountPath: "/etc/opt/ercot/puppetfiles/configuration"

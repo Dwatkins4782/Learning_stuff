@@ -1,0 +1,26 @@
+# Username used to access the puppetfiles repository in source control.
+com.ercot.puppetfiles.username={{ SOURCE_CONTROL_USERNAME }}
+
+# Password for the user account specified in the SOURCE_CONTROL_USERNAME property used to access the puppetfiles repository in source control.
+com.ercot.puppetfiles.password={{ SOURCE_CONTROL_PASSWORD }}
+
+# Comma separated list of Ant-style paths specifying API endpoints that should be protected with LDAP backed basic authentication. e.g /puppetfiles/v1/create/**
+com.ercot.puppetfiles.secure.endpoints={{ PROTECTED_ENDPOINTS }}
+
+# LDAP OU containing user accounts that should have access to the protected endpoints specified above. e.g. OU=ERCOT USERS
+com.ercot.puppetfiles.ldap.userBase={{ LDAP_BASE_USERS_OU }}
+
+# LDAP filter the application will use to find user accounts. e.g. sAMAccountName={0}
+com.ercot.puppetfiles.ldap.filter={{ LDAP_USER_FILTER }}
+
+# LDAP server URL used to authenticate users. e.g. ldaps://ercot.com:636
+com.ercot.puppetfiles.ldap.url={{ LDAP_SERVER_URL }}
+
+# LDAP server root DN where relevant objects can be found. e.g. dc=ercot,dc=com
+com.ercot.puppetfiles.ldap.rootDn={{ LDAP_ROOT_DN }}
+
+# LDAP manager account dn the application will use to bind to the directory to search for users. e.g. cn=puppetfiles,ou=ercot service accounts,ou=ercot users,dc=ercot,dc=com
+com.ercot.puppetfiles.ldap.managerDn={{ LDAP_MANAGER_ACCOUNT_DN }}
+
+# LDAP password for the manager account specified by the LDAP_MANAGER_ACCOUNT_DN property.
+com.ercot.puppetfiles.ldap.managerPw={{ LDAP_MANAGER_ACCOUNT_PASSWORD }}

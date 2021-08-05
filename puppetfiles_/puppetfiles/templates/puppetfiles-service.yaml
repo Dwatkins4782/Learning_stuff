@@ -1,0 +1,20 @@
+## SERVICE ##
+{{- include "service.version" . }}
+kind: "Service"
+metadata:
+  labels:
+    {{- include "puppetfiles.labels.puppetfiles" . | indent 4 }}
+  annotations:
+    {{- include "puppetfiles.tracking.annotation" . | indent 4 }}
+  name: "{{ .Release.Name }}-{{ .Values.puppetfiles.svcComponent }}"
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  ports:
+  - port: {{ .Values.puppetfiles.port }}
+    name: "ppt-ingress"
+    protocol: "TCP"
+    targetPort: {{ .Values.puppetfiles.port }}
+  selector:
+    {{- include "puppetfiles.selector.puppetfiles" . | indent 4 }}
+  sessionAffinity: "ClientIP"
+  type: "ClusterIP"

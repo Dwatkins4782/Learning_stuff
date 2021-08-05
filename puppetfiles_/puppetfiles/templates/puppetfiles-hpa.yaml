@@ -1,0 +1,24 @@
+## HPA ##
+{{- include "hpa.version" . }}
+kind: "HorizontalPodAutoscaler"
+metadata:
+  name: "{{ .Release.Name }}-{{ .Values.puppetfiles.component }}-hpa"
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "puppetfiles.labels.puppetfiles" . | indent 4 }}
+  annotations:
+    {{- include "puppetfiles.tracking.annotation" . | indent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: "apps/v1"
+    kind: "Deployment"
+    name: "{{ .Release.Name }}-{{ .Values.puppetfiles.component }}-deployment"
+  minReplicas: {{ .Values.puppetfiles.minReplicas }}
+  maxReplicas: {{ .Values.puppetfiles.maxReplicas }}
+  metrics:
+  - type: "Resource"
+    resource:
+      name: "cpu"
+      target:
+        type: "Utilization"
+        averageUtilization: {{ .Values.puppetfiles.cpuLoadAverage }}

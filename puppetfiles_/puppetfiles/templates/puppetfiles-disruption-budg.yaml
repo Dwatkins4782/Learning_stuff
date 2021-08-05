@@ -1,0 +1,15 @@
+## DISRUPTION BUDGET ##
+{{- include "disruption.version" . }}
+kind: "PodDisruptionBudget"
+metadata:
+  name: "{{ .Release.Name }}-{{ .Values.puppetfiles.component }}-budget"
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "puppetfiles.labels.puppetfiles" . | indent 4 }}
+  annotations:
+    {{- include "puppetfiles.tracking.annotation" . | indent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "puppetfiles.selector.puppetfiles" . | indent 6 }}
+  minAvailable: {{ .Values.puppetfiles.minAvailable }}

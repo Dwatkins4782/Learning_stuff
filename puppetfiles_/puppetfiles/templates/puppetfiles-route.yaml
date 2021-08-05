@@ -1,0 +1,26 @@
+{{- if .Values.route.enabled -}}
+## OPENSHIFT ROUTE ## 
+{{ if .Capabilities.APIVersions.Has "route.openshift.io/v1" }}
+{{- include "route.version" . }}
+kind: "Route"
+metadata:
+  name: "{{ .Release.Name }}-{{ .Values.application.name }}"
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    {{- include "puppetfiles.labels" . | indent 4 }}
+  annotations:
+    {{- include "puppetfiles.tracking.annotation" . | indent 4 }}
+spec:
+  host: {{ .Values.route.host }}.{{ .Values.route.domain }}
+  port:
+    targetPort: "ppt-ingress"
+  tls:
+    insecureEdgeTerminationPolicy: "Redirect"
+    termination: "edge"
+  to:
+    kind: "Service"
+    name: "{{ .Release.Name }}-{{ .Values.puppetfiles.svcComponent }}"
+    weight: 100
+  wildcardPolicy: None
+{{ end }}
+{{- end }}

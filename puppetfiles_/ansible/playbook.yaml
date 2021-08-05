@@ -1,0 +1,110 @@
+- name: Deploy/Upgrade Puppetfiles REST API
+  hosts:
+    - all
+  become: true
+  roles:
+    - ercot.certs
+
+  tasks:
+  - name: Install/Update Java JDK
+    yum:
+      name: https://repo.ercot.com/artifactory/maven-thirdparty/com/oracle/jdk/{{ JAVA_VERSION }}/jdk-{{ JAVA_VERSION }}-linux-x64.rpm
+      state: present
+      disable_gpg_check: yes
+    when: host_type == "api"
+
+  - name: Install/Update Puppetfiles API
+    yum:
+      name: https://repo.ercot.com/artifactory/maven-ercot/com/ercot/puppetfiles/{{ PUPPETFILES_VERSION }}/puppetfiles-{{ PUPPETFILES_VERSION }}.rpm
+      state: present
+      disable_gpg_check: yes
+    when: host_type == "api"
+
+  - name: Configure/Update API Secrets (Puppetfiles)
+    template:
+      src: puppetfiles.properties.j2
+      dest: /etc/opt/ercot/puppetfiles/secrets/puppetfiles.properties
+      owner: puppetfiles
+      group: puppetfiles
+      mode: 0640
+    when: host_type == "api"
+
+  - name: Configure/Update API Configuration (Puppetfiles)
+    template:
+      src: application.properties.j2
+      dest: /etc/opt/ercot/puppetfiles/configuration/application.properties
+      owner: puppetfiles
+      group: puppetfiles
+      mode: 0640
+    when: host_type == "api"
+
+  - name: Configure/Update CACerts
+    include_role:
+      name: ercot.certs
+      tasks_from: update-jre-cacerts
+    vars:
+      jre_path: /usr/java/latest
+    when: host_type == "api"
+
+  - name: Install/Update Proxy (Nginx)
+    include_role:
+      name: ercot.nginx
+    when: host_type == "proxy"
+
+  - name: Configure/Update Proxy (Nginx)
+    template:
+      src: nginx.conf.j2
+      dest: /etc/nginx/nginx.conf
+      owner: root
+      group: root
+      mode: 0640
+    when: host_type == "proxy"
+
+  - name: Deploy Proxy Certificate
+    include_role:
+      name:       ercot.certs
+      tasks_from: install-cert
+    vars:
+      server_id:         "{{ SERVICE_FQDN }}"
+      cert_path:         certs/{{ SERVICE_FQDN }}.crt
+      key_path:          certs/{{ SERVICE_FQDN }}.key
+      intermediate_path: certs/intermediate.crt
+
+  - name: Remove Existing DNS CNAME For Service
+    nios_cname_record:
+      name: "{{ SERVICE_FQDN }}"
+      canonical: "{{ ansible_host }}"
+      state: absent
+      provider:
+        host: "{{ NIOS_PROVIDER }}"
+        username: "{{ NIOS_USERNAME }}"
+        password: "{{ NIOS_PASSWORD }}"
+    delegate_to: 127.0.0.1
+    when: host_type == "proxy"
+
+  - name: ReCreate DNS CNAME For Service
+    nios_cname_record:
+      name: "{{ SERVICE_FQDN }}"
+      canonical: "{{ ansible_host }}"
+      comment: "Puppetfiles Ansible Deployment"
+      state: present
+      provider:
+        host: "{{ NIOS_PROVIDER }}"
+        username: "{{ NIOS_USERNAME }}"
+        password: "{{ NIOS_PASSWORD }}"
+    delegate_to: 127.0.0.1
+    when: host_type == "proxy"
+
+  - name: Start Puppetfiles API Systemd Service
+    service:
+      name: puppetfiles
+      enabled: yes
+      state: started
+    when: host_type == "api"
+
+  - name: Start Puppetfiles Proxy Systemd Service
+    service:
+      name: nginx
+      enabled: yes
+      state: started
+    when: host_type == "proxy"

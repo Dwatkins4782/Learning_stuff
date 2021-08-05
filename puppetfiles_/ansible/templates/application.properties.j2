@@ -1,0 +1,20 @@
+# Instructs Spring Boot Actuator to expose all of its status endpoints.
+management.endpoints.web.exposure.include=*
+
+# Instructs Spring Boot Actuator to expose details on app components in the health endpoint.
+management.endpoint.health.show-details=always
+
+# Instructs Spring Boot Actuator to expose Kubernetes style readiness/liveness probe endpoints.
+management.endpoint.health.probes.enabled=true
+
+# Instructs Spring Boot to log to the specified file in addition to the console.
+logging.file.name=/var/log/ercot/puppetfiles/puppetfiles.log
+
+# LDAP server URL used to for Spring Boot's health checking. e.g. ldaps://ercot.com:636
+spring.ldap.urls={{ LDAP_SERVER_URL }}
+
+# LDAP username for the account used for Spring Boot's health checking. e.g. puppetfiles
+spring.ldap.username={{ SOURCE_CONTROL_USERNAME }}
+
+# LDAP password for the account used for Spring Boot's health checking.
+spring.ldap.password={{ SOURCE_CONTROL_PASSWORD }}
